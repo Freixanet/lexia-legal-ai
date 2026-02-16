@@ -108,6 +108,11 @@ export async function streamChat(
     callbacks.onComplete(fullText);
   } catch (err) {
     if ((err as Error).name === 'AbortError') return;
-    callbacks.onError(`Error de conexión: ${(err as Error).message}`);
+    // Friendly message when backend proxy is not available (e.g. GitHub Pages)
+    if ((err as Error).message?.includes('Failed to fetch') || (err as Error).message?.includes('NetworkError')) {
+      callbacks.onError('El servicio de IA no está disponible en esta versión estática. Visita la versión completa en Vercel para usar el asistente legal.');
+    } else {
+      callbacks.onError(`Error de conexión: ${(err as Error).message}`);
+    }
   }
 }
