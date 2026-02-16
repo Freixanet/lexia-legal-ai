@@ -10,6 +10,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar, sidebarOpen }) => {
   const [input, setInput] = useState('');
+  const [showAllCards, setShowAllCards] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar,
   const handlePromptClick = (question: string) => {
     onSendMessage(question);
   };
+
+  const visiblePrompts = EXAMPLE_PROMPTS.slice(0, 3);
+  const hiddenPrompts = EXAMPLE_PROMPTS.slice(3);
 
   return (
     <div className="landing" role="region" aria-label="Página de inicio de Lexia">
@@ -100,7 +104,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar,
         <section className="landing-prompts" aria-label="Consultas de ejemplo">
           <h2 className="landing-prompts-title">Prueba con una de estas consultas</h2>
           <div className="landing-prompts-grid" role="list">
-            {EXAMPLE_PROMPTS.map((prompt, i) => (
+            {/* First 3 always visible */}
+            {visiblePrompts.map((prompt, i) => (
               <button
                 key={i}
                 className="prompt-card"
@@ -120,7 +125,46 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar,
                 </svg>
               </button>
             ))}
+            {/* Remaining 3 — collapsed on mobile, always visible on desktop */}
+            <div className={`prompts-expandable ${showAllCards ? 'expanded' : ''}`}>
+              {hiddenPrompts.map((prompt, i) => (
+                <button
+                  key={i + 3}
+                  className="prompt-card"
+                  onClick={() => handlePromptClick(prompt.question)}
+                  style={{ animationDelay: `${(i + 3) * 80}ms` }}
+                  role="listitem"
+                  aria-label={`${prompt.category}: ${prompt.question}`}
+                >
+                  <span className="prompt-card-icon" aria-hidden="true">{prompt.icon}</span>
+                  <div className="prompt-card-content">
+                    <span className="prompt-card-category">{prompt.category}</span>
+                    <p className="prompt-card-question">{prompt.question}</p>
+                  </div>
+                  <svg className="prompt-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </button>
+              ))}
+            </div>
           </div>
+          {/* Mobile toggle */}
+          <button
+            className="prompts-toggle"
+            onClick={() => setShowAllCards(!showAllCards)}
+            aria-expanded={showAllCards}
+          >
+            {showAllCards ? 'Ver menos' : 'Ver más consultas'}
+            <svg
+              className={`prompts-toggle-icon ${showAllCards ? 'rotated' : ''}`}
+              width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2"
+              aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
         </section>
 
         {/* Footer */}
