@@ -48,9 +48,15 @@
   --color-surface-active: rgba(255, 255, 255, 0.08);
 
   --color-text-primary: #f0ece4;
-  --color-text-secondary: #a0a8b8;
-  --color-text-tertiary: #6b7280;
-  --color-text-muted: #4b5563;
+  --color-text-secondary: #cbd5e1; /* Lighter, better contrast */
+  --color-text-tertiary: #94a3b8; /* Was 6b7280 */
+  
+  /* New Tokens */
+  --color-text-dim: #94a3b8;    /* Use for timestamps, subtitles (accessible) */
+  --color-text-disabled: #475569; /* Only for disabled states or decorative */
+  
+  /* Deprecated/Mapped for backward compat, but safer */
+  --color-text-muted: #64748b;  /* Was 4b5563 - bumped up slightly */
 
   --color-accent: #c9a84c;
   --color-accent-hover: #d4b65e;

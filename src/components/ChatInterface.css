@@ -39,7 +39,7 @@
 
 .chat-header-model {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
   letter-spacing: var(--tracking-wide);
 }
 
@@ -176,7 +176,7 @@
 }
 
 .chat-input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
 }
 
 .chat-input-actions {
@@ -222,7 +222,7 @@
 .chat-disclaimer {
   text-align: center;
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
   margin-top: var(--space-2);
   letter-spacing: var(--tracking-wide);
 }
