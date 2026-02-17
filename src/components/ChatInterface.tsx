@@ -25,7 +25,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    messagesEndRef.current?.scrollIntoView({
+      behavior: mediaQuery.matches ? 'auto' : 'smooth'
+    });
   }, [conversation.messages, streamingContent]);
 
   useEffect(() => {

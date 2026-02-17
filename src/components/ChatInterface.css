@@ -61,7 +61,6 @@
   height: 6px;
   border-radius: 50%;
   background: var(--color-success);
-  animation: pulse 2s ease-in-out infinite;
 }
 
 /* Messages */

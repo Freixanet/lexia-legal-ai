@@ -92,7 +92,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                 key={i}
                 className="prompt-card"
                 onClick={() => handlePromptClick(prompt.question)}
-                style={{ animationDelay: `${i * 80}ms` }}
                 role="listitem"
                 aria-label={`${prompt.category}: ${prompt.question}`}
               >
@@ -114,7 +113,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                   key={i + 3}
                   className="prompt-card"
                   onClick={() => handlePromptClick(prompt.question)}
-                  style={{ animationDelay: `${(i + 3) * 80}ms` }}
                   role="listitem"
                   aria-label={`${prompt.category}: ${prompt.question}`}
                 >
