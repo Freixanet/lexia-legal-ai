@@ -6,6 +6,53 @@ interface LandingPageProps {
   onSendMessage: (message: string) => void;
 }
 
+
+// SVG Icons Map
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  "Laboral": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+    </svg>
+  ),
+  "Vivienda": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+  ),
+  "Consumo": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1"></circle>
+      <circle cx="20" cy="21" r="1"></circle>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+    </svg>
+  ),
+  "Herencias": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+  ),
+  "Tráfico": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="3" width="15" height="13"></rect>
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+      <circle cx="5.5" cy="18.5" r="2.5"></circle>
+      <circle cx="18.5" cy="18.5" r="2.5"></circle>
+    </svg>
+  ),
+  "Datos": (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+  )
+};
+
 const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const [input, setInput] = useState('');
   const [showAllCards, setShowAllCards] = useState(false);
@@ -41,7 +88,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
             <span className="headline-serif">con inteligencia artificial</span>
           </h1>
 
-          <p className="landing-subtitle fade-in-up">
+          <p className="landing-subtitle">
             Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
             y recibe respuestas claras, estructuradas y con referencias legales.
           </p>
@@ -95,7 +142,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                 role="listitem"
                 aria-label={`${prompt.category}: ${prompt.question}`}
               >
-                <span className="prompt-card-icon" aria-hidden="true">{prompt.icon}</span>
+                <span className="prompt-card-icon" aria-hidden="true">
+                  {CATEGORY_ICONS[prompt.category] || <span style={{fontSize: '20px'}}>?</span>}
+                </span>
                 <div className="prompt-card-content">
                   <span className="prompt-card-category">{prompt.category}</span>
                   <p className="prompt-card-question">{prompt.question}</p>
@@ -116,7 +165,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                   role="listitem"
                   aria-label={`${prompt.category}: ${prompt.question}`}
                 >
-                  <span className="prompt-card-icon" aria-hidden="true">{prompt.icon}</span>
+                  <span className="prompt-card-icon" aria-hidden="true">
+                    {CATEGORY_ICONS[prompt.category] || <span style={{fontSize: '20px'}}>?</span>}
+                  </span>
                   <div className="prompt-card-content">
                     <span className="prompt-card-category">{prompt.category}</span>
                     <p className="prompt-card-question">{prompt.question}</p>

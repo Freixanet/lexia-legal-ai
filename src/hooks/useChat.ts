@@ -31,7 +31,14 @@ export function useChat() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Persist conversations
+  const conversationsRef = useRef(conversations);
+
+  // Keep ref in sync ensuring async callbacks always have latest state
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  // Persist conservations
   useEffect(() => {
     saveToStorage(STORAGE_KEY_CONVERSATIONS, conversations);
   }, [conversations]);
@@ -63,10 +70,27 @@ export function useChat() {
     [activeConversationId]
   );
 
+  const restoreConversation = useCallback((conversation: Conversation) => {
+    setConversations((prev) => {
+      // Avoid duplicates
+      if (prev.some(c => c.id === conversation.id)) return prev;
+      // Insert back (sorting will be handled by Sidebar, but we prepend for now or just add)
+      return [conversation, ...prev].sort((a, b) => b.updatedAt - a.updatedAt);
+    });
+  }, []);
+
+  const renameConversation = useCallback((id: string, newTitle: string) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title: newTitle } : c))
+    );
+  }, []);
+
   const sendMessage = useCallback(
     async (content: string) => {
       setError(null);
       let conversationId = activeConversationId;
+      
+      const currentConversations = conversationsRef.current;
 
       if (!conversationId) {
         conversationId = generateId();
@@ -77,8 +101,16 @@ export function useChat() {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
+        // Optimistic update for UI
         setConversations((prev) => [newConversation, ...prev]);
         setActiveConversationId(conversationId);
+        
+        // Critical: Also update ref immediately for current scope logic if needed, 
+        // ALTHOUGH we are about to use currentConversations which is still old.
+        // Better strategy: construct the *new* list locally for streamChat context.
+        // We will push the new convo to currentConversations array clone? 
+        // No, currentConversations is the ref value.
+        // Actually, if we just created it, we know it's empty.
       }
 
       const userMessage: Message = {
@@ -109,9 +141,29 @@ export function useChat() {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
 
-      // Get current messages for context
-      const currentConv = conversations.find((c) => c.id === conversationId);
-      const allMessages = [...(currentConv?.messages || []), userMessage];
+      // Get current messages for context using REF source of truth
+      // If we just created a conversation, it won't be in currentConversations yet (from Ref).
+      // So we must handle that case.
+      
+      let allMessages: Message[] = [];
+      
+      // If activeConversationId was null, we just created a new one. 
+      // The old ref doesn't have it.
+      // So effectively context is [userMessage].
+      
+      // However, if conversationId existed:
+      const existingConv = conversationsRef.current.find((c) => c.id === conversationId);
+      
+      if (existingConv) {
+         allMessages = [...existingConv.messages, userMessage];
+      } else {
+         // New conversation scenario or race condition.
+         // If we just created it (conversationId defined above), previous messages are empty.
+         allMessages = [userMessage];
+      }
+
+      // Safe check: ensure allMessages is not empty
+      if (allMessages.length === 0) allMessages = [userMessage];
 
       await streamChat(allMessages, {
         onToken: (token) => {
@@ -146,7 +198,7 @@ export function useChat() {
         },
       }, abortController.signal);
     },
-    [activeConversationId, conversations]
+    [activeConversationId] // removed conversations from dependency
   );
 
   const stopStreaming = useCallback(() => {
@@ -173,5 +225,7 @@ export function useChat() {
     sendMessage,
     stopStreaming,
     clearAllConversations,
+    restoreConversation,
+    renameConversation,
   };
 }

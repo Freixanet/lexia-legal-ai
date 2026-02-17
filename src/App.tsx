@@ -17,6 +17,8 @@ function App() {
     error,
     createConversation,
     deleteConversation,
+    restoreConversation,
+    renameConversation,
     sendMessage,
     stopStreaming,
     clearAllConversations,
@@ -57,6 +59,8 @@ function App() {
         onSelectConversation={setActiveConversationId}
         onNewConversation={handleNewConversation}
         onDeleteConversation={deleteConversation}
+        onRestoreConversation={restoreConversation}
+        onRenameConversation={renameConversation}
         onClearAll={clearAllConversations}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

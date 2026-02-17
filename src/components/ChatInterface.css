@@ -9,17 +9,16 @@
 .chat-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: 0 var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  background: rgba(10, 15, 28, 0.8);
+  background: rgba(10, 15, 28, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   height: var(--header-height);
   flex-shrink: 0;
 }
-
-
 
 .chat-header-info {
   flex: 1;
@@ -37,30 +36,114 @@
   letter-spacing: var(--tracking-tight);
 }
 
-.chat-header-model {
-  font-size: var(--text-xs);
-  color: var(--color-text-dim);
-  letter-spacing: var(--tracking-wide);
-}
-
-.chat-header-badge {
+/* Header Controls */
+.chat-header-controls {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--color-success);
-  font-weight: 500;
-  padding: var(--space-1) var(--space-3);
-  background: rgba(52, 211, 153, 0.08);
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
+  gap: var(--space-4);
 }
 
-.badge-dot {
-  width: 6px;
-  height: 6px;
+.header-select {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  appearance: none; /* Remove default arrow */
+  padding-right: var(--space-4);
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-2) center;
+}
+
+.header-select:hover {
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+}
+
+.header-select option {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+/* Toggle Switch */
+.header-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.header-toggle:hover {
+  color: var(--color-text-primary);
+}
+
+.toggle-track {
+  width: 36px;
+  height: 20px;
+  background: var(--color-bg-tertiary);
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s;
+  border: 1px solid var(--color-border);
+}
+
+.toggle-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
   border-radius: 50%;
-  background: var(--color-success);
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.header-toggle.active .toggle-track {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.header-toggle.active .toggle-thumb {
+  transform: translateX(16px);
+}
+
+.toggle-label {
+  display: none; /* Hide text on mobile? or always shown? User said 'Fuentes: ON/OFF' */
+}
+
+@media (min-width: 640px) {
+  .toggle-label {
+    display: block;
+  }
+}
+
+/* Status Indicator (Offline) */
+.header-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.header-status-indicator.offline {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 /* Messages */
@@ -119,23 +202,12 @@
 }
 
 /* Error */
-.chat-error {
+.chat-error-container {
+  padding: var(--space-4);
+  width: 100%;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(248, 113, 113, 0.08);
-  border: 1px solid rgba(248, 113, 113, 0.2);
-  border-radius: var(--radius-md);
-  color: var(--color-error);
-  font-size: var(--text-sm);
-  margin: var(--space-3) 0;
-  animation: fadeInUp var(--duration-normal) var(--ease-out);
-}
-
-.chat-error svg {
-  flex-shrink: 0;
-  margin-top: 2px;
+  justify-content: center;
+  animation: fadeIn var(--duration-fast) ease-out;
 }
 
 /* Input Area */

@@ -130,57 +130,145 @@
   margin-bottom: var(--space-1);
 }
 
-.sidebar-conv-item {
+/* Container for the item and its actions */
+.sidebar-item-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  position: relative;
   border-radius: var(--radius-md);
+  transition: background var(--duration-fast);
+}
+
+.sidebar-item-container:hover {
+  background: var(--color-surface-hover);
+}
+
+.sidebar-conv-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  transition: all var(--duration-fast) var(--ease-out);
   text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .sidebar-conv-item:hover {
-  background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 
 .sidebar-conv-item.active {
-  background: var(--color-accent-subtle);
   color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* Active state for the whole container if item is active? 
+   Actually, usually we highlight the item. 
+   Let's keep the active style on the text loop, but maybe background on container?
+   The previous logic had background on .sidebar-conv-item.
+   Let's move background to .sidebar-conv-item.active? 
+   No, sidebar-item-container handles hover. 
+   Let's leave it as is for now. 
+*/
+
+.sidebar-conv-item.active {
+  /* background is handled by container hover? No. */
+}
+
+/* Re-applying active background logic if needed, but container strategy is better */
+.sidebar-item-container:has(.sidebar-conv-item.active) {
+  background: var(--color-accent-subtle);
 }
 
 .sidebar-conv-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
-  min-width: 0;
 }
 
-.sidebar-conv-delete {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+/* Actions Menu */
+.sidebar-item-actions {
+  display: flex;
+  align-items: center;
+  padding-right: var(--space-2);
+}
+
+.sidebar-kebab-btn {
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  color: var(--color-text-dim);
+  color: var(--color-text-tertiary);
+  transition: all 0.2s;
   opacity: 0;
-  transition: all var(--duration-fast) var(--ease-out);
 }
 
-.sidebar-conv-item:hover .sidebar-conv-delete {
+/* Show actions on hover (desktop), active state, or if device is touch */
+.sidebar-item-container:hover .sidebar-kebab-btn,
+.sidebar-kebab-btn.active {
   opacity: 1;
 }
 
-.sidebar-conv-delete:hover {
-  background: rgba(248, 113, 113, 0.15);
+@media (hover: none) {
+  .sidebar-kebab-btn {
+    opacity: 1;
+  }
+}
+
+.sidebar-kebab-btn:hover,
+.sidebar-kebab-btn.active {
+  background: rgba(0,0,0,0.05); /* Subtle dark overlay on light mode */
+  color: var(--color-text-primary);
+}
+
+/* Dropdown */
+.sidebar-menu-dropdown {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: var(--space-2);
+  width: 140px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.sidebar-menu-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: background 0.1s;
+  text-align: left;
+}
+
+.sidebar-menu-dropdown button:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-menu-dropdown button.danger {
   color: var(--color-error);
+}
+
+.sidebar-menu-dropdown button.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .sidebar-empty {

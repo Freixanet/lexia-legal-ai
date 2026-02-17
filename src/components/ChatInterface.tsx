@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
+import ErrorCard from './ErrorCard';
 import type { Conversation } from '../services/api';
 import './ChatInterface.css';
 
@@ -21,8 +22,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onStopStreaming,
 }) => {
   const [input, setInput] = useState('');
+  const [jurisdiction, setJurisdiction] = useState('es');
+  const [sourcesEnabled, setSourcesEnabled] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -57,14 +74,47 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="chat-interface">
       {/* Chat Header */}
+      {/* Chat Header */}
       <header className="chat-header">
         <div className="chat-header-info">
           <h2 className="chat-header-title">{conversation.title}</h2>
-          <span className="chat-header-model">Asistente Legal IA</span>
         </div>
-        <div className="chat-header-badge" role="status" aria-label="Estado: activo">
-          <span className="badge-dot" aria-hidden="true" />
-          Activo
+
+        <div className="chat-header-controls">
+          {/* Jurisdiction Selector */}
+          <div className="header-control-group">
+            <select 
+              className="header-select" 
+              aria-label="Seleccionar jurisdicción"
+              value={jurisdiction}
+              onChange={(e) => setJurisdiction(e.target.value)}
+            >
+              <option value="es">España</option>
+              <option value="cat">Cataluña</option>
+              <option value="mad">Madrid</option>
+              <option value="eu">Unión Europea</option>
+            </select>
+          </div>
+
+          {/* Sources Toggle */}
+          <button 
+            className={`header-toggle ${sourcesEnabled ? 'active' : ''}`}
+            aria-pressed={sourcesEnabled}
+            aria-label="Alternar fuentes verificadas"
+            onClick={() => setSourcesEnabled(!sourcesEnabled)}
+          >
+            <span className="toggle-label">Fuentes</span>
+            <div className="toggle-track">
+              <div className="toggle-thumb" />
+            </div>
+          </button>
+
+          {/* Status (Only shows on error/offline) */}
+          {isOffline && (
+            <div className="header-status-indicator offline">
+               Offline
+            </div>
+          )}
         </div>
       </header>
 
@@ -112,15 +162,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           )}
 
-          {/* Error */}
           {error && (
-            <div className="chat-error" role="alert">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <p>{error}</p>
+            <div className="chat-error-container">
+              <ErrorCard message={error} />
             </div>
           )}
 
