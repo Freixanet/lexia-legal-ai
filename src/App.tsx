@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChat } from './hooks/useChat';
+import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import LandingPage from './components/LandingPage';
 import ChatInterface from './components/ChatInterface';
@@ -31,12 +32,24 @@ function App() {
     setActiveConversationId(null);
   };
 
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
+
   return (
     <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {/* Skip to main content — a11y */}
       <a href="#main-content" className="skip-link">
         Saltar al contenido principal
       </a>
+
+      {/* Persistent top bar */}
+      <TopBar
+        onGoHome={handleGoHome}
+        onNewConversation={handleNewConversation}
+        onToggleSidebar={handleToggleSidebar}
+        sidebarOpen={sidebarOpen}
+      />
 
       <Sidebar
         conversations={conversations}
@@ -58,30 +71,11 @@ function App() {
             error={error}
             onSendMessage={sendMessage}
             onStopStreaming={stopStreaming}
-            onOpenSidebar={() => setSidebarOpen(true)}
-            sidebarOpen={sidebarOpen}
           />
         ) : (
           <LandingPage
             onSendMessage={sendMessage}
-            onOpenSidebar={() => setSidebarOpen(true)}
-            sidebarOpen={sidebarOpen}
           />
-        )}
-
-        {/* Home button when in chat */}
-        {activeConversation && (
-          <button
-            id="home-button"
-            className="app-home-btn"
-            onClick={handleGoHome}
-            aria-label="Volver al inicio"
-          >
-            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path d="M8 24V8h2.5v13.5H20V24H8Z" fill="currentColor"/>
-              <circle cx="23" cy="10" r="2.5" fill="currentColor" opacity="0.6"/>
-            </svg>
-          </button>
         )}
       </main>
     </div>

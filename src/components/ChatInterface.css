@@ -19,29 +19,7 @@
   flex-shrink: 0;
 }
 
-.chat-menu-btn {
-  display: flex;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  transition: all var(--duration-fast) var(--ease-out),
-              opacity 0.25s ease, transform 0.25s ease;
-}
 
-.chat-menu-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text-primary);
-}
-
-/* Hide when sidebar is open */
-.sidebar-open .chat-menu-btn {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-8px);
-}
 
 .chat-header-info {
   flex: 1;

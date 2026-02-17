@@ -10,8 +10,6 @@ interface ChatInterfaceProps {
   error: string | null;
   onSendMessage: (message: string) => void;
   onStopStreaming: () => void;
-  onOpenSidebar: () => void;
-  sidebarOpen: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -21,8 +19,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   error,
   onSendMessage,
   onStopStreaming,
-  onOpenSidebar,
-  sidebarOpen,
 }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -59,20 +55,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     <div className="chat-interface">
       {/* Chat Header */}
       <header className="chat-header">
-        <button
-          id="chat-sidebar-toggle"
-          className="chat-menu-btn"
-          onClick={onOpenSidebar}
-          aria-label="Abrir menú lateral"
-          aria-expanded={sidebarOpen}
-          aria-controls="sidebar"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
         <div className="chat-header-info">
           <h2 className="chat-header-title">{conversation.title}</h2>
           <span className="chat-header-model">Asistente Legal IA</span>

@@ -4,11 +4,9 @@ import './LandingPage.css';
 
 interface LandingPageProps {
   onSendMessage: (message: string) => void;
-  onOpenSidebar: () => void;
-  sidebarOpen: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar, sidebarOpen }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const [input, setInput] = useState('');
   const [showAllCards, setShowAllCards] = useState(false);
 
@@ -29,22 +27,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage, onOpenSidebar,
 
   return (
     <div className="landing" role="region" aria-label="Página de inicio de Lexia">
-      {/* Mobile menu */}
-      <button
-        id="landing-sidebar-toggle"
-        className="landing-menu-btn"
-        onClick={onOpenSidebar}
-        aria-label="Abrir menú lateral"
-        aria-expanded={sidebarOpen}
-        aria-controls="sidebar"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-
       <div className="landing-content">
         {/* Hero */}
         <header className="landing-hero">
