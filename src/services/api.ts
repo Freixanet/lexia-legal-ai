@@ -108,7 +108,8 @@ export async function streamChat(
         }
         
         if (msg.data === '[DONE]') {
-            return;
+            callbacks.onComplete(fullText);
+            throw new Error('STOP_STREAM');
         }
 
         try {
@@ -123,10 +124,13 @@ export async function streamChat(
         }
       },
       onclose() {
-        // if the server closes the connection, we want to complete
+        // if the server closes the connection natively, we want to complete
         callbacks.onComplete(fullText);
       },
       onerror(err) {
+        if ((err as Error).message === 'STOP_STREAM') {
+            return; // Expected explicit stop, do not retry and do not throw to UI
+        }
         if (signal?.aborted) {
             // User aborted, do nothing (or rethrow if library requires)
              throw err; 
@@ -136,7 +140,7 @@ export async function streamChat(
       }
     });
   } catch (err) {
-     if (signal?.aborted) return;
+     if (signal?.aborted || (err as Error).message === 'STOP_STREAM') return;
      
      // Friendly message when backend proxy is not available (e.g. GitHub Pages)
      if ((err as Error).message?.includes('Failed to fetch') || (err as Error).message?.includes('NetworkError')) {

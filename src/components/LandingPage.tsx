@@ -66,9 +66,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Prevent files > 10MB approx for safety
-    if (file.size > 10 * 1024 * 1024) {
-      alert("El documento es demasiado grande (máx 10MB)");
+    // Prevent files > 2.5MB for Vercel Edge 4MB payload limit
+    if (file.size > 2.5 * 1024 * 1024) {
+      alert("El documento es demasiado grande (máx 2.5MB para mantener el límite del servidor).");
       return;
     }
     
