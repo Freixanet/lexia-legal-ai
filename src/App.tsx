@@ -42,7 +42,7 @@ function App() {
 
   // Sync activeConversationId with URL
   useEffect(() => {
-    const match = location.pathname.match(/^\/chat\/(.+)$/);
+    const match = location.pathname.match(/^\/c\/(.+)$/);
     if (match && match[1]) {
       setActiveConversationId(match[1]);
     } else if (location.pathname === '/') {
@@ -66,12 +66,12 @@ function App() {
   };
 
   const handleSelectConversation = (id: string) => {
-    navigate(`/chat/${id}`);
+    navigate(`/c/${id}`);
   };
 
   const handleDeleteConversation = (id: string) => {
     deleteConversation(id);
-    if (activeConversationId === id || location.pathname === `/chat/${id}`) {
+    if (activeConversationId === id || location.pathname === `/c/${id}`) {
        navigate('/');
     }
   };
@@ -80,7 +80,7 @@ function App() {
     const id = await sendMessage(content, options);
     // If it's a new conversation from root, navigate to its URL once created
     if (id && location.pathname === '/') {
-       navigate(`/chat/${id}`);
+       navigate(`/c/${id}`);
     }
   };
 
@@ -122,7 +122,7 @@ function App() {
             <Route path="/" element={
               <LandingPage key="landing-page" onSendMessage={handleSendMessage} />
             } />
-            <Route path="/chat/:id" element={
+            <Route path="/c/:id" element={
               activeConversation ? (
                 <ChatInterface
                   key="chat-interface"
