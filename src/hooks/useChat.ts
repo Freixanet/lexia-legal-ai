@@ -183,7 +183,8 @@ export function useChat() {
         });
       }
 
-      await streamChat(allMessages, {
+      // Fire and forget the stream so the UI can navigate instantly and show loading state
+      streamChat(allMessages, {
         onToken: (token) => {
           setStreamingContent((prev) => prev + token);
         },
@@ -217,7 +218,7 @@ export function useChat() {
       }, {
         jurisdiction: options?.jurisdiction ?? 'es',
         sourcesEnabled: options?.sourcesEnabled ?? true
-      }, abortController.signal);
+      }, abortController.signal).catch(console.error);
 
       return conversationId;
     },
