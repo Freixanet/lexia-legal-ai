@@ -1,5 +1,5 @@
 .landing {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -583,7 +583,7 @@
   }
 
   .landing-search-input {
-    font-size: var(--text-sm);
+    font-size: 16px; /* Stop iOS Safari zoom */
     padding: var(--space-2) 0;
   }
 

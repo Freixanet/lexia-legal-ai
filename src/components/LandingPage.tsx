@@ -113,19 +113,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
       <div className="landing-content">
         {/* Hero */}
         <header className="landing-hero">
-          <div className="landing-badge fade-in" role="status">
-            <span className="landing-badge-dot" aria-hidden="true" />
-            Asistente Legal IA
-          </div>
-
           <h1 className="landing-headline">
             <span className="headline-serif">Resuelve tus</span>
             <span className="headline-accent">dudas legales</span>
-            <span className="headline-serif">con inteligencia artificial</span>
           </h1>
 
           <p className="landing-subtitle">
-            Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
+            Con inteligencia artificial. Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
             y recibe respuestas claras, estructuradas y con referencias legales.
           </p>
         </header>

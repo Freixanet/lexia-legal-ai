@@ -241,7 +241,7 @@
 .chat-input {
   flex: 1;
   padding: var(--space-2) var(--space-2);
-  font-size: var(--text-base);
+  font-size: 16px; /* Prevent iOS Safari auto-zoom */
   line-height: var(--leading-normal);
   color: var(--color-text-primary);
   max-height: 160px;
