@@ -31,6 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,11 +49,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, []);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    messagesEndRef.current?.scrollIntoView({
-      behavior: mediaQuery.matches ? 'auto' : 'smooth'
-    });
-  }, [conversation.messages, streamingContent]);
+    const container = chatMessagesRef.current;
+    if (!container) return;
+
+    // Check if user is scrolled to the bottom (within 100px tolerance)
+    const isScrolledToBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+    
+    // Only auto-scroll if user is already at the bottom OR we are not actively streaming (e.g. initial load)
+    if (!isStreaming || isScrolledToBottom) {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      messagesEndRef.current?.scrollIntoView({
+        behavior: mediaQuery.matches ? 'auto' : 'smooth'
+      });
+    }
+  }, [conversation.messages, streamingContent, isStreaming]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -135,6 +145,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Messages Area */}
       <div
+        ref={chatMessagesRef}
         className="chat-messages"
         role="log"
         aria-label="Historial de mensajes"
