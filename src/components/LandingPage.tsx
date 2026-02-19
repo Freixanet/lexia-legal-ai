@@ -116,10 +116,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
           <h1 className="landing-headline">
             <span className="headline-serif">Resuelve tus</span>
             <span className="headline-accent">dudas legales</span>
+            <span className="headline-serif">con inteligencia artificial</span>
           </h1>
 
           <p className="landing-subtitle">
-            Con inteligencia artificial. Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
+            Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
             y recibe respuestas claras, estructuradas y con referencias legales.
           </p>
         </header>
