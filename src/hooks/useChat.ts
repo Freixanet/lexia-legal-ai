@@ -171,7 +171,12 @@ export function useChat() {
       const isEmptyConversation = currentConversations.find(c => c.id === conversationId)?.messages.length === 0;
 
       if (isNewConversation || isEmptyConversation) {
-        generateSmartTitle(content).then((smartTitle) => {
+        // Enriquecer el contexto si hay un adjunto para mejorar la generación del título
+        const titleContext = options?.attachment 
+            ? `Texto: "${content}". Archivo adjunto: "${options.attachment.name}"`
+            : content;
+            
+        generateSmartTitle(titleContext).then((smartTitle) => {
           setConversations((prev) => 
             prev.map((c) => (c.id === conversationId ? { ...c, title: smartTitle } : c))
           );
