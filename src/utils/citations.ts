@@ -33,14 +33,14 @@ export function parseSources(content: string): ParsedContent {
       const trimmed = line.trim();
       if (!trimmed.startsWith('-')) return null;
       
-      // Expected format: "- [Title](Url)" or "- [Title]"
-      // We assign ID based on order: "1", "2", "3"...
-      const lineMatch = trimmed.match(/-\s*\[([^\]]+)\](?:\(([^)]+)\))?/);
+      // Expected format: "- [ID] [Title](Url)" or "- [ID] [Title]"
+      // We capture the explicit ID to avoid fragility if the LLM skips numbers
+      const lineMatch = trimmed.match(/-\s*\[(\d+)\]\s*\[([^\]]+)\](?:\(([^)]+)\))?/);
       if (lineMatch) {
         return { 
-          id: (index + 1).toString(), // Simple 1-based index matching logical order
-          title: lineMatch[1], 
-          url: lineMatch[2] || undefined 
+          id: lineMatch[1], // Extract explicit ID
+          title: lineMatch[2], 
+          url: lineMatch[3] || undefined 
         };
       }
       return null;

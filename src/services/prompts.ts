@@ -129,10 +129,10 @@ Si algún paso requiere un escrito tipo (burofax, reclamación previa, escrito i
 - **Prohibido:** El "Depende" vacío. Si depende, explica las variables y los umbrales exactos.
 - **Fuentes y Citas:**
   1. Cuando cites una ley, artículo o sentencia en tu texto, añade SIEMPRE una referencia numérica entre corchetes, por ejemplo: "...según el artículo 14 [1]." o "La jurisprudencia indica [2]...".
-  2. Al final de tu respuesta, añade SIEMPRE una sección de fuentes estructurada exactamente así:
+  2. Al final de tu respuesta, añade SIEMPRE una sección de fuentes estructurada exactamente así, incluyendo el [ID] numérico:
   ---SOURCES---
-  - [Nombre de la Ley o Sentencia](URL oficial si la tienes, sino déjalo vacío)
-  - [Nombre de la Fuente 2](URL)
+  - [1] [Nombre de la Ley o Sentencia](URL oficial si la tienes, sino déjalo vacío)
+  - [2] [Nombre de la Fuente 2](URL)
   ---END SOURCES---
   3. El orden de las fuentes en la lista debe corresponder al número que has usado en el texto (la primera fuente es [1], la segunda [2], etc.).
   Si no has usado fuentes específicas, escribe:
