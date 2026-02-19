@@ -1,10 +1,18 @@
 import { LEXIA_SYSTEM_PROMPT } from './prompts';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+
+export interface Attachment {
+  name: string;
+  type: string; // MIME type
+  data: string; // Base64 chunk
+}
 
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  attachments?: Attachment[];
 }
 
 export interface Conversation {
@@ -34,13 +42,37 @@ export function generateTitle(firstMessage: string): string {
   return words.length > 50 ? words.substring(0, 50) + '…' : words;
 }
 
+export async function generateSmartTitle(firstMessage: string): Promise<string> {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        task: 'title',
+        messages: [{ role: 'user', content: firstMessage }]
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to generate title');
+    
+    const data = await response.json();
+    return data.title || generateTitle(firstMessage);
+  } catch (error) {
+    console.error('Smart title generation failed:', error);
+    return generateTitle(firstMessage);
+  }
+}
+
 export async function streamChat(
   messages: Message[],
   callbacks: StreamCallbacks,
+  options?: { jurisdiction: string; sourcesEnabled: boolean },
   signal?: AbortSignal
 ): Promise<void> {
+  let fullText = '';
+
   try {
-    const response = await fetch(API_URL, {
+    await fetchEventSource(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -49,70 +81,68 @@ export async function streamChat(
         messages: messages.map((m) => ({
           role: m.role,
           content: m.content,
+          attachments: m.attachments,
         })),
         systemPrompt: LEXIA_SYSTEM_PROMPT,
+        jurisdiction: options?.jurisdiction,
+        sourcesEnabled: options?.sourcesEnabled,
       }),
       signal,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage =
-        (errorData as Record<string, string>)?.error ||
-        `Error ${response.status}: ${response.statusText}`;
-      callbacks.onError(errorMessage);
-      return;
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      callbacks.onError('No se pudo establecer la conexión de streaming.');
-      return;
-    }
-
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data: ')) continue;
-
-        const data = trimmed.slice(6);
-        if (data === '[DONE]') {
-          callbacks.onComplete(fullText);
-          return;
+      async onopen(response) {
+        if (response.ok) {
+          return; // everything is good
+        } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+          // client-side errors are usually non-retriable
+           const errorData = await response.json().catch(() => ({}));
+           const errorMessage = (errorData as Record<string, string>)?.error || `Error ${response.status}: ${response.statusText}`;
+           throw new Error(errorMessage);
+        } else {
+           throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+      },
+      onmessage(msg) {
+        // if the server emits an error message, throw an exception
+        // so it gets handled by the onerror callback
+        if (msg.event === 'FatalError') {
+          throw new Error(msg.data);
+        }
+        
+        if (msg.data === '[DONE]') {
+            return;
         }
 
         try {
-          const parsed = JSON.parse(data);
+          const parsed = JSON.parse(msg.data);
           const token = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
           if (token) {
             fullText += token;
             callbacks.onToken(token);
           }
-        } catch {
-          // Skip invalid JSON lines
+        } catch (e) {
+          // ignore invalid json from stream
         }
+      },
+      onclose() {
+        // if the server closes the connection, we want to complete
+        callbacks.onComplete(fullText);
+      },
+      onerror(err) {
+        if (signal?.aborted) {
+            // User aborted, do nothing (or rethrow if library requires)
+             throw err; 
+        }
+        // Rethrow to stop retries if desired, or handle retry logic
+        throw err;
       }
-    }
-
-    callbacks.onComplete(fullText);
+    });
   } catch (err) {
-    if ((err as Error).name === 'AbortError') return;
-    // Friendly message when backend proxy is not available (e.g. GitHub Pages)
-    if ((err as Error).message?.includes('Failed to fetch') || (err as Error).message?.includes('NetworkError')) {
-      callbacks.onError('El servicio de IA no está disponible en esta versión estática. Visita la versión completa en Vercel para usar el asistente legal.');
-    } else {
-      callbacks.onError(`Error de conexión: ${(err as Error).message}`);
-    }
+     if (signal?.aborted) return;
+     
+     // Friendly message when backend proxy is not available (e.g. GitHub Pages)
+     if ((err as Error).message?.includes('Failed to fetch') || (err as Error).message?.includes('NetworkError')) {
+       callbacks.onError('El servicio de IA no está disponible en esta versión estática. Visita la versión completa en Vercel para usar el asistente legal.');
+     } else {
+       callbacks.onError(`Error de conexión: ${(err as Error).message}`);
+     }
   }
 }

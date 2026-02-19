@@ -43,19 +43,107 @@ const server = http.createServer(async (req, res) => {
   for await (const chunk of req) chunks.push(chunk);
   const body = JSON.parse(Buffer.concat(chunks).toString());
 
-  const { messages, systemPrompt } = body;
+  const { messages, systemPrompt, jurisdiction, sourcesEnabled, task } = body;
 
-  const contents = messages.map((m) => ({
-    role: m.role === 'user' ? 'user' : 'model',
-    parts: [{ text: m.content }],
-  }));
+  // --- TASK: TITLE GENERATION ---
+  if (task === 'title') {
+    const firstMessage = messages[0]?.content;
+    if (!firstMessage) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Message required for title generation' }));
+    }
+
+    const titlePrompt = `Analiza el siguiente mensaje de usuario y genera un título muy breve, descriptivo y formal (máximo 4 palabras) que resuma la intención legal.
+    Ejemplos:
+    Input: "Hola, ¿puedo echar a mi inquilino si no paga?" -> "Desahucio por impago"
+    Input: "Me han puesto una multa de tráfico y quiero recurrirla" -> "Recurso multa tráfico"
+    Input: "Derechos si me despiden estando de baja" -> "Despido durante baja médica"
+    
+    Mensaje: "${firstMessage.substring(0, 500)}"
+    Título:`;
+
+    const geminiBodyTitle = {
+      contents: [{ role: 'user', parts: [{ text: titlePrompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+      },
+    };
+
+    try {
+      const titleRes = await fetch(GEMINI_API_URL.replace('streamGenerateContent?alt=sse&', 'generateContent?'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBodyTitle),
+      });
+
+      if (!titleRes.ok) {
+        throw new Error('Gemini API error');
+      }
+
+      const data = await titleRes.json();
+      const title = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/^["']|["']$/g, '') || 'Nueva consulta';
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ title }));
+    } catch (err) {
+      console.error('Title generation error:', err);
+      // Fallback
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ title: messages[0].content.substring(0, 30) + '...' }));
+    }
+  }
+
+  // Map jurisdiction codes to full names
+  const jurisdictionMap = {
+    es: 'España (Nacional)',
+    cat: 'Cataluña (Autonómica + Estatal)',
+    mad: 'Madrid (Autonómica + Estatal)',
+    eu: 'Unión Europea',
+  };
+
+  const jurisdictionName = jurisdictionMap[jurisdiction] || 'España';
+  const sourcesStatus = sourcesEnabled ? 'ACTIVO' : 'DESACTIVADO';
+
+  // Inject configuration into System Prompt
+  const configPrompt = `
+    
+---
+### 🛠️ CONFIGURACIÓN DE USUARIO (PRIORIDAD MÁXIMA)
+- **Jurisdicción Activa:** ${jurisdictionName}
+- **Fuentes Verificadas:** ${sourcesStatus} (Si está ACTIVO, prioriza BOE/CENDOJ/EUR-Lex sobre tu memoria).
+---`;
+
+  const finalSystemPrompt = (systemPrompt || '') + configPrompt;
+
+  const contents = messages.map((m) => {
+    const parts = [{ text: m.content }];
+    
+    if (m.attachments && Array.isArray(m.attachments)) {
+      m.attachments.forEach((att) => {
+        if (att.data && att.type) {
+           const base64Data = att.data.includes(',') ? att.data.split(',')[1] : att.data;
+           parts.push({
+             inlineData: {
+               mimeType: att.type,
+               data: base64Data
+             }
+           });
+        }
+      });
+    }
+
+    return {
+      role: m.role === 'user' ? 'user' : 'model',
+      parts,
+    };
+  });
 
   const geminiBody = {
     contents,
     generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
   };
-  if (systemPrompt) {
-    geminiBody.systemInstruction = { parts: [{ text: systemPrompt }] };
+  if (finalSystemPrompt) {
+    geminiBody.systemInstruction = { parts: [{ text: finalSystemPrompt }] };
   }
 
   try {

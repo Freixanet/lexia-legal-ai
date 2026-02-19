@@ -1,0 +1,135 @@
+/* Citation Badge Trigger */
+.citation-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: super;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: rgba(var(--primary-rgb), 0.1);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.citation-trigger:hover {
+  background-color: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.citation-badge-fallback {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  vertical-align: super;
+}
+
+/* Popover Content */
+.citation-popover-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.05); /* extra border for contrast */
+  padding: 12px;
+  width: 260px;
+  max-width: 90vw;
+  z-index: 1000;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.citation-popover-content[data-state='open'] {
+  animation-name: slideUpAndFade;
+}
+
+.citation-popover-content[data-state='closed'] {
+  animation-name: slideDownAndFade;
+}
+
+.citation-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.citation-id {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.citation-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.citation-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.citation-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border-radius: 4px;
+  width: fit-content;
+  transition: background-color 0.2s;
+}
+
+.citation-link:hover {
+  background-color: rgba(var(--primary-rgb), 0.1);
+  text-decoration: none;
+}
+
+.citation-popover-arrow {
+  fill: var(--bg-card);
+  stroke: var(--border-color);
+  stroke-width: 1px;
+}
+
+@keyframes slideUpAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownAndFade {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}

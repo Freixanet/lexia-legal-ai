@@ -2,16 +2,13 @@ import React, { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Message } from '../services/api';
+import Citation from './ui/Citation';
+import { parseSources, preprocessContent } from '../utils/citations';
 import './MessageBubble.css';
 
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
-}
-
-interface Source {
-  title: string;
-  url?: string;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) => {
@@ -33,50 +30,40 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
     minute: '2-digit',
   });
 
-  // Extract sources from content
-  const { cleanContent, sources, verificationStatus } = useMemo(() => {
+  // Extract sources and preprocess content
+  const { cleanContent, sources, verificationStatus, processedContent } = useMemo(() => {
     if (isUser || isStreaming) {
-      return { cleanContent: message.content, sources: [], verificationStatus: 'none' };
+      return { 
+        cleanContent: message.content, 
+        sources: [], 
+        verificationStatus: 'none',
+        processedContent: message.content 
+      };
     }
 
-    const sourcesRegex = /---SOURCES---([\s\S]*?)---END SOURCES---/;
-    const match = message.content.match(sourcesRegex);
-
-    if (!match) {
-      // If we are finished streaming but no block found, it's unverified/no sources
-      return { cleanContent: message.content, sources: [], verificationStatus: 'none' };
-    }
-
-    const sourcesBlock = match[1].trim();
-    const cleanContent = message.content.replace(sourcesRegex, '').trim();
-
-    if (sourcesBlock === 'None') {
-      return { cleanContent, sources: [], verificationStatus: 'unverified' };
-    }
-
-    const parsedSources = sourcesBlock.split('\n')
-      .map((line): Source | null => {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('-')) return null;
-        
-        // Parse "- [Title](Url)" or "- [Title]"
-        const lineMatch = trimmed.match(/-\s*\[([^\]]+)\](?:\(([^)]+)\))?/);
-        if (lineMatch) {
-          return { 
-            title: lineMatch[1], 
-            url: lineMatch[2] || undefined 
-          };
-        }
-        return null;
-      })
-      .filter((s): s is Source => s !== null);
+    const parsed = parseSources(message.content);
+    const processed = preprocessContent(parsed.cleanContent);
+    const status = parsed.sources.length > 0 ? 'verified' : 'unverified';
 
     return { 
-      cleanContent, 
-      sources: parsedSources, 
-      verificationStatus: parsedSources.length > 0 ? 'verified' : 'unverified' 
+      cleanContent: parsed.cleanContent, 
+      sources: parsed.sources, 
+      verificationStatus: status,
+      processedContent: processed
     };
   }, [message.content, isUser, isStreaming]);
+
+  // Custom components for ReactMarkdown to render Citations
+  const MarkdownComponents = {
+    a: ({ href, children, ...props }: any) => {
+      if (href?.startsWith('citation:')) {
+        const id = href.split(':')[1];
+        const source = sources.find(s => s.id === id);
+        return <Citation id={id} source={source} />;
+      }
+      return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
+    }
+  };
 
   return (
     <article
@@ -97,74 +84,71 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
         )}
         <div className={`message-body ${isUser ? '' : 'markdown-content'}`}>
           {isUser ? (
-            <p>{message.content}</p>
+            <>
+              {message.attachments && message.attachments.length > 0 && (
+                 <div className="message-attachment-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: message.content ? '8px' : '0', fontSize: '0.9rem', color: 'var(--color-primary-light)' }}>
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                   </svg>
+                   <span>{message.attachments[0].name}</span>
+                 </div>
+              )}
+              {message.content && <p>{message.content}</p>}
+            </>
           ) : (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {cleanContent}
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={MarkdownComponents}
+            >
+              {processedContent}
             </ReactMarkdown>
           )}
           {isStreaming && (
             <span className="typing-cursor" aria-hidden="true" />
           )}
 
-          {/* Sources Block - Only for assistant, when not streaming */}
+          {/* Sources Summary - Only for assistant, when not streaming */}
           {!isUser && !isStreaming && verificationStatus !== 'none' && (
-            <div className="message-sources">
-              <details className="sources-details">
-                <summary className={`sources-summary ${verificationStatus === 'verified' ? 'verified' : 'unverified'}`}>
-                  <div className="sources-badge">
-                    {verificationStatus === 'verified' ? (
-                      <>
-                        <svg className="sources-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        Fuentes Verificadas
-                      </>
-                    ) : (
-                      <>
-                        <svg className="sources-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                           <line x1="12" y1="8" x2="12" y2="12" />
-                           <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                        Sin Verificación
-                      </>
-                    )}
-                  </div>
-                  <svg className="sources-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </summary>
-                <div className="sources-content">
-                  {sources.length > 0 ? (
-                    <ul className="sources-list" role="list">
-                      {sources.map((s, i) => (
-                        <li key={i}>
-                          <a 
-                            href={s.url || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={s.url ? 'source-link' : 'source-text'}
-                            onClick={(e) => !s.url && e.preventDefault()}
-                          >
-                            {s.title}
-                            {s.url && (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                              </svg>
-                            )}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+            <div className="message-sources-summary">
+               <div className={`sources-badge-inline ${verificationStatus}`}>
+                  {verificationStatus === 'verified' ? (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {sources.length} Fuentes Verificadas
+                    </>
                   ) : (
-                    <p className="sources-empty">
-                      Esta respuesta está basada en el entrenamiento general del modelo y no cita fuentes legislativas específicas externas.
-                    </p>
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                         <line x1="12" y1="8" x2="12" y2="12" />
+                         <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      Sin Verificación
+                    </>
                   )}
-                </div>
-              </details>
+               </div>
+               
+               {/* Optional: We can still show the list if needed, or hide it since we have inline citations. 
+                   Let's keep a simplified list for accessibility/quick reference */}
+               {sources.length > 0 && (
+                <details className="sources-details-minimal">
+                  <summary>Ver lista de fuentes</summary>
+                  <ul className="sources-list-minimal">
+                    {sources.map((s) => (
+                      <li key={s.id}>
+                        <span className="source-id">[{s.id}]</span>
+                        {s.url ? (
+                          <a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a>
+                        ) : (
+                          <span>{s.title}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+               )}
             </div>
           )}
         </div>

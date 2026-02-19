@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { EXAMPLE_PROMPTS } from '../services/prompts';
+import type { Attachment } from '../services/api';
 import './LandingPage.css';
 
-interface LandingPageProps {
-  onSendMessage: (message: string) => void;
-}
+// ... (props and icons remain the same)
 
+interface LandingPageProps {
+  onSendMessage: (message: string, options?: { attachment?: Attachment }) => void;
+}
 
 // SVG Icons Map
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -56,13 +59,39 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const [input, setInput] = useState('');
   const [showAllCards, setShowAllCards] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Prevent files > 10MB approx for safety
+    if (file.size > 10 * 1024 * 1024) {
+      alert("El documento es demasiado grande (máx 10MB)");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setPendingAttachment({
+        name: file.name,
+        type: file.type,
+        data: base64
+      });
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
-    if (!trimmed) return;
-    onSendMessage(trimmed);
+    if (!trimmed && !pendingAttachment) return;
+    onSendMessage(trimmed, { attachment: pendingAttachment || undefined });
     setInput('');
+    setPendingAttachment(null);
   };
 
   const handlePromptClick = (question: string) => {
@@ -73,7 +102,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const hiddenPrompts = EXAMPLE_PROMPTS.slice(3);
 
   return (
-    <div className="landing" role="region" aria-label="Página de inicio de Lexia">
+    <motion.div 
+      className="landing" 
+      role="region" 
+      aria-label="Página de inicio de Lexia"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
+    >
       <div className="landing-content">
         {/* Hero */}
         <header className="landing-hero">
@@ -96,11 +132,48 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
 
         {/* Search / Ask Bar */}
         <form className="landing-search" onSubmit={handleSubmit} role="search" aria-label="Buscar consulta legal">
-          <div className="landing-search-container">
-            <svg className="landing-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+          <motion.div 
+            className="landing-search-container" 
+            layoutId="chat-input-container"
+            style={{ position: 'relative' }} /* For absolute pill positioning */
+          >
+            {pendingAttachment && (
+               <div className="chat-attachment-pill">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                 </svg>
+                 <span className="attachment-name">{pendingAttachment.name}</span>
+                 <button 
+                   type="button" 
+                   className="attachment-remove" 
+                   onClick={() => setPendingAttachment(null)}
+                   aria-label="Quitar archivo"
+                 >
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                 </button>
+               </div>
+            )}
+            <div className="chat-input-leading-actions">
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+              />
+              <button
+                type="button"
+                className="chat-attach-btn"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Adjuntar documento"
+                title="Adjuntar PDF o Imagen"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+              </button>
+            </div>
             <label htmlFor="landing-search-input" className="visually-hidden">
               Tu consulta legal
             </label>
@@ -113,33 +186,37 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
               placeholder="Haz tu consulta legal..."
               autoComplete="off"
             />
-            <button
-              id="landing-submit-btn"
-              className="landing-search-btn"
-              type="submit"
-              disabled={!input.trim()}
-              aria-label="Enviar consulta"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
-          </div>
+            
+            <div className="landing-search-actions">
+              <button
+                id="landing-submit-btn"
+                className="landing-search-btn"
+                type="submit"
+                disabled={!input.trim() && !pendingAttachment}
+                aria-label="Enviar consulta"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
 
         </form>
 
         {/* Example Prompts */}
         <section className="landing-prompts" aria-label="Consultas de ejemplo">
+          {/* ... (prompts content remains same) */}
           <h2 className="landing-prompts-title">Prueba con una de estas consultas</h2>
           <div className="landing-prompts-grid" role="list">
-            {/* First 3 always visible */}
-            {visiblePrompts.map((prompt, i) => (
+             {/* ... mapped prompts ... */}
+             {visiblePrompts.map((prompt, i) => (
               <button
                 key={i}
                 className="prompt-card"
                 onClick={() => handlePromptClick(prompt.question)}
-                role="listitem"
+                role="listitem" // Explicitly setting listitem for list roll
                 aria-label={`${prompt.category}: ${prompt.question}`}
               >
                 <span className="prompt-card-icon" aria-hidden="true">
@@ -155,8 +232,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                 </svg>
               </button>
             ))}
-            {/* Remaining 3 — collapsed on mobile, always visible on desktop */}
-            <div className={`prompts-expandable ${showAllCards ? 'expanded' : ''}`}>
+             <div className={`prompts-expandable ${showAllCards ? 'expanded' : ''}`}>
               {hiddenPrompts.map((prompt, i) => (
                 <button
                   key={i + 3}
@@ -180,8 +256,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
               ))}
             </div>
           </div>
-          {/* Mobile toggle */}
-          <button
+          {/* ... toggle button ... */}
+           <button
             className="prompts-toggle"
             onClick={() => setShowAllCards(!showAllCards)}
             aria-expanded={showAllCards}
@@ -214,7 +290,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
           </div>
         </footer>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

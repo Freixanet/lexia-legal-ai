@@ -1,47 +1,65 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { streamChat, generateId, generateTitle, type Message, type Conversation } from '../services/api';
+import { get, set } from 'idb-keyval';
+import { streamChat, generateId, generateTitle, generateSmartTitle, type Message, type Conversation, type Attachment } from '../services/api';
 
 const STORAGE_KEY_CONVERSATIONS = 'lexia_conversations';
 
-function loadFromStorage<T>(key: string, fallback: T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function saveToStorage(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage full or unavailable
-  }
-}
-
 export function useChat() {
-  const [conversations, setConversations] = useState<Conversation[]>(() =>
-    loadFromStorage(STORAGE_KEY_CONVERSATIONS, [])
-  );
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
-
   const conversationsRef = useRef(conversations);
+  const isInitialLoad = useRef(true);
 
   // Keep ref in sync ensuring async callbacks always have latest state
   useEffect(() => {
     conversationsRef.current = conversations;
   }, [conversations]);
 
-  // Persist conservations
+  // Initial load and migration
   useEffect(() => {
-    saveToStorage(STORAGE_KEY_CONVERSATIONS, conversations);
-  }, [conversations]);
+    async function loadData() {
+      try {
+        // Try idb first
+        const idbData = await get<Conversation[]>(STORAGE_KEY_CONVERSATIONS);
+        
+        if (idbData && idbData.length > 0) {
+          setConversations(idbData);
+        } else {
+          // Migration from localStorage
+          const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
+          if (localDataRaw) {
+            const localData = JSON.parse(localDataRaw) as Conversation[];
+            setConversations(localData);
+            await set(STORAGE_KEY_CONVERSATIONS, localData);
+            localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
+            console.log("Migrated discussions from localStorage to IndexedDB");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load conversations from IndexedDB", err);
+      } finally {
+        setIsLoaded(true);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Persist conversations
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      if (isLoaded) {
+          isInitialLoad.current = false;
+      }
+      return;
+    }
+    set(STORAGE_KEY_CONVERSATIONS, conversations).catch(console.error);
+  }, [conversations, isLoaded]);
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId) || null;
 
@@ -86,7 +104,7 @@ export function useChat() {
   }, []);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, options?: { jurisdiction?: string; sourcesEnabled?: boolean; attachment?: Attachment }) => {
       setError(null);
       let conversationId = activeConversationId;
       
@@ -96,7 +114,7 @@ export function useChat() {
         conversationId = generateId();
         const newConversation: Conversation = {
           id: conversationId,
-          title: generateTitle(content),
+          title: generateTitle(content || (options?.attachment ? `Documento: ${options.attachment.name}` : 'Nueva consulta')),
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -104,13 +122,6 @@ export function useChat() {
         // Optimistic update for UI
         setConversations((prev) => [newConversation, ...prev]);
         setActiveConversationId(conversationId);
-        
-        // Critical: Also update ref immediately for current scope logic if needed, 
-        // ALTHOUGH we are about to use currentConversations which is still old.
-        // Better strategy: construct the *new* list locally for streamChat context.
-        // We will push the new convo to currentConversations array clone? 
-        // No, currentConversations is the ref value.
-        // Actually, if we just created it, we know it's empty.
       }
 
       const userMessage: Message = {
@@ -118,6 +129,7 @@ export function useChat() {
         role: 'user',
         content,
         timestamp: Date.now(),
+        ...(options?.attachment ? { attachments: [options.attachment] } : {})
       };
 
       // Update conversation with user message
@@ -142,28 +154,29 @@ export function useChat() {
       abortControllerRef.current = abortController;
 
       // Get current messages for context using REF source of truth
-      // If we just created a conversation, it won't be in currentConversations yet (from Ref).
-      // So we must handle that case.
-      
       let allMessages: Message[] = [];
-      
-      // If activeConversationId was null, we just created a new one. 
-      // The old ref doesn't have it.
-      // So effectively context is [userMessage].
-      
-      // However, if conversationId existed:
       const existingConv = conversationsRef.current.find((c) => c.id === conversationId);
       
       if (existingConv) {
          allMessages = [...existingConv.messages, userMessage];
       } else {
-         // New conversation scenario or race condition.
-         // If we just created it (conversationId defined above), previous messages are empty.
          allMessages = [userMessage];
       }
 
-      // Safe check: ensure allMessages is not empty
       if (allMessages.length === 0) allMessages = [userMessage];
+
+      // --- SMART TITLE GENERATION ---
+      // Trigger if it's a new conversation OR an existing empty conversation
+      const isNewConversation = !activeConversationId;
+      const isEmptyConversation = currentConversations.find(c => c.id === conversationId)?.messages.length === 0;
+
+      if (isNewConversation || isEmptyConversation) {
+        generateSmartTitle(content).then((smartTitle) => {
+          setConversations((prev) => 
+            prev.map((c) => (c.id === conversationId ? { ...c, title: smartTitle } : c))
+          );
+        });
+      }
 
       await streamChat(allMessages, {
         onToken: (token) => {
@@ -196,9 +209,14 @@ export function useChat() {
           setIsStreaming(false);
           setStreamingContent('');
         },
+      }, {
+        jurisdiction: options?.jurisdiction ?? 'es',
+        sourcesEnabled: options?.sourcesEnabled ?? true
       }, abortController.signal);
+
+      return conversationId;
     },
-    [activeConversationId] // removed conversations from dependency
+    [activeConversationId]
   );
 
   const stopStreaming = useCallback(() => {
@@ -214,6 +232,7 @@ export function useChat() {
 
   return {
     conversations,
+    isLoaded,
     activeConversation,
     activeConversationId,
     setActiveConversationId,
