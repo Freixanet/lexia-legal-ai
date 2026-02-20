@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './ui/Icon';
 import './ErrorCard.css';
 
 interface ErrorCardProps {
@@ -21,7 +22,6 @@ const ErrorCard: React.FC<ErrorCardProps> = ({ message, onRetry }) => {
   };
 
   const handleOpenDemo = () => {
-    // Placeholder URL - User should update this
     window.open('https://lexia-law.vercel.app', '_blank');
   };
 
@@ -29,7 +29,7 @@ const ErrorCard: React.FC<ErrorCardProps> = ({ message, onRetry }) => {
     <div className="error-card" role="alert">
       <div className="error-card-header">
         <div className="error-status">
-          <span className="status-dot disconnected" aria-hidden="true" />
+          <span className="status-dot" aria-hidden="true" />
           <span className="status-text">Desconectado</span>
         </div>
         <h3 className="error-title">Servicio no disponible</h3>
@@ -39,48 +39,30 @@ const ErrorCard: React.FC<ErrorCardProps> = ({ message, onRetry }) => {
 
       <div className="error-actions">
         {isStaticError && (
-          <button 
+          <button
             onClick={handleOpenDemo}
             className="error-btn error-btn-primary"
-            aria-label="Abrir demostración en Vercel"
+            aria-label="Abrir demo"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
+            <Icon name="external-link" size={16} />
             Abrir Demo
           </button>
         )}
 
-        <button 
+        <button
           onClick={handleCopyLink}
           className="error-btn error-btn-secondary"
-          aria-label={copied ? "Enlace copiado" : "Copiar enlace de esta página"}
+          aria-label={copied ? "Enlace copiado" : "Copiar enlace"}
         >
           {copied ? (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Copiado
-            </>
+            <><Icon name="check" size={16} /> Copiado</>
           ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              Copiar Enlace
-            </>
+            <><Icon name="copy" size={16} /> Copiar Enlace</>
           )}
         </button>
 
         {onRetry && !isStaticError && (
-          <button 
-            onClick={onRetry}
-            className="error-btn error-btn-primary"
-          >
+          <button onClick={onRetry} className="error-btn error-btn-primary">
             Reintentar
           </button>
         )}

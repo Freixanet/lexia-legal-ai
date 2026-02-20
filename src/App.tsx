@@ -4,21 +4,31 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useChat } from './hooks/useChat';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import { SkeletonLanding, SkeletonChat } from './components/ui/Skeleton';
+import './components/ui/ErrorBoundary.css';
+import './components/ui/Skeleton.css';
 import './App.css';
+import './styles/v1-overrides.css';
 
-// Lazy loaded routes for Code Splitting
-const LandingPage = lazy(() => import('./components/LandingPage'));
-const ChatInterface = lazy(() => import('./components/ChatInterface'));
+const LandingPageV2 = lazy(() => import('./components/LandingPage'));
+const ChatInterfaceV2 = lazy(() => import('./components/ChatInterface'));
+const LandingPageV1 = lazy(() => import('./components/v1/LandingPageV1'));
+const ChatInterfaceV1 = lazy(() => import('./components/v1/ChatInterfaceV1'));
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Theme Management
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('lexia-theme');
     if (saved === 'light' || saved === 'dark') return saved;
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+
+  const [designVersion, setDesignVersion] = useState<'v1' | 'v2'>(() => {
+    const saved = localStorage.getItem('lexia-design');
+    return saved === 'v1' ? 'v1' : 'v2';
   });
 
   useEffect(() => {
@@ -26,7 +36,17 @@ function App() {
     localStorage.setItem('lexia-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (designVersion === 'v1') {
+      document.documentElement.setAttribute('data-design', 'v1');
+    } else {
+      document.documentElement.removeAttribute('data-design');
+    }
+    localStorage.setItem('lexia-design', designVersion);
+  }, [designVersion]);
+
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const toggleDesign = () => setDesignVersion(prev => prev === 'v1' ? 'v2' : 'v1');
 
   const {
     conversations,
@@ -45,10 +65,9 @@ function App() {
     clearAllConversations,
   } = useChat();
 
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 769);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  // Swipe gesture to open sidebar on mobile
   useEffect(() => {
     let touchStartX = 0;
     let touchEndX = 0;
@@ -61,12 +80,10 @@ function App() {
     const handleTouchEnd = (e: TouchEvent) => {
       touchEndX = e.changedTouches[0].screenX;
       const swipeDistance = touchEndX - touchStartX;
-      
-      // Only trigger if swipe started from left edge (first 30px)
+
       if (touchStartX < 30 && swipeDistance > minSwipeDistance && !sidebarOpen) {
         setSidebarOpen(true);
       }
-      // Swipe left to close
       if (swipeDistance < -minSwipeDistance && sidebarOpen) {
         setSidebarOpen(false);
       }
@@ -88,7 +105,6 @@ function App() {
     }
   };
 
-  // Sync activeConversationId with URL
   useEffect(() => {
     const match = location.pathname.match(/^\/c\/(.+)$/);
     if (match && match[1]) {
@@ -101,12 +117,8 @@ function App() {
   const handleNewConversation = () => {
     setActiveConversationId(null);
     if (location.pathname === '/') {
-      // User is already on Home, improve UX by autofocusing the chat request input
-      // instead of performing a dummy navigation loop
       const input = document.getElementById('landing-search-input');
-      if (input) {
-         input.focus();
-      }
+      if (input) input.focus();
     } else {
       navigate('/');
     }
@@ -128,81 +140,87 @@ function App() {
   const handleDeleteConversation = (id: string) => {
     deleteConversation(id);
     if (activeConversationId === id || location.pathname === `/c/${id}`) {
-       navigate('/');
+      navigate('/');
     }
   };
 
   const handleSendMessage = async (content: string, options?: any) => {
     const id = await sendMessage(content, options);
-    // If it's a new conversation from root, navigate to its URL once created
     if (id && location.pathname === '/') {
-       navigate(`/c/${id}`);
+      navigate(`/c/${id}`);
     }
   };
 
   if (!isLoaded) {
-    return <div className="app" style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }} />;
+    return <div className="app" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} />;
   }
 
+  const LandingPage = designVersion === 'v1' ? LandingPageV1 : LandingPageV2;
+  const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
+
   return (
-    <div className="app">
-      {/* Skip to main content — a11y */}
-      <a href="#main-content" className="skip-link">
-        Saltar al contenido principal
-      </a>
+    <ErrorBoundary>
+      <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <a href="#main-content" className="skip-link">
+          Saltar al contenido principal
+        </a>
 
-      {/* Persistent top bar */}
-      <TopBar
-        onGoHome={handleGoHome}
-        onNewConversation={handleNewConversation}
-        onToggleSidebar={handleToggleSidebar}
-        sidebarOpen={sidebarOpen}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+        <TopBar
+          onGoHome={handleGoHome}
+          onNewConversation={handleNewConversation}
+          onToggleSidebar={handleToggleSidebar}
+          sidebarOpen={sidebarOpen}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          designVersion={designVersion}
+          onToggleDesign={toggleDesign}
+        />
 
-      <Sidebar
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewConversation={handleNewConversation}
-        onDeleteConversation={handleDeleteConversation}
-        onRestoreConversation={restoreConversation}
-        onRenameConversation={renameConversation}
-        onClearAll={clearAllConversations}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+        <Sidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewConversation={handleNewConversation}
+          onDeleteConversation={handleDeleteConversation}
+          onRestoreConversation={restoreConversation}
+          onRenameConversation={renameConversation}
+          onClearAll={clearAllConversations}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
-      <main id="main-content" className="app-main">
-        <Suspense fallback={<div className="app" style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }} />}>
+        <main id="main-content" className="app-main">
           <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
+            <Routes location={location} key={location.pathname + designVersion}>
               <Route path="/" element={
-                <LandingPage key="landing-page" onSendMessage={handleSendMessage} />
+                <Suspense fallback={<SkeletonLanding />}>
+                  <LandingPage key={`landing-${designVersion}`} onSendMessage={handleSendMessage} />
+                </Suspense>
               } />
               <Route path="/c/:id" element={
-                activeConversation ? (
-                  <ChatInterface
-                    key="chat-interface"
-                    conversation={activeConversation}
-                    isStreaming={isStreaming}
-                    error={error}
-                    onSendMessage={handleSendMessage}
-                    onStopStreaming={stopStreaming}
-                    draftConfig={draftConfig}
-                  />
-                ) : (
-                  <div style={{ padding: '2rem', color: 'var(--color-primary-light)', textAlign: 'center' }}>
-                    Conversación no encontrada.
-                  </div>
-                )
+                <Suspense fallback={<SkeletonChat />}>
+                  {activeConversation ? (
+                    <ChatInterface
+                      key={`chat-${designVersion}`}
+                      conversation={activeConversation}
+                      isStreaming={isStreaming}
+                      error={error}
+                      onSendMessage={handleSendMessage}
+                      onStopStreaming={stopStreaming}
+                      draftConfig={draftConfig}
+                    />
+                  ) : (
+                    <div style={{ padding: '2rem', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+                      Conversación no encontrada.
+                    </div>
+                  )}
+                </Suspense>
               } />
             </Routes>
           </AnimatePresence>
-        </Suspense>
-      </main>
-    </div>
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }
 

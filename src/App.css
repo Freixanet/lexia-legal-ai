@@ -1,3 +1,7 @@
+/* ==============================================
+   App Layout Shell
+   ============================================== */
+
 /* --- Skip Link (a11y) --- */
 .skip-link {
   position: absolute;
@@ -6,11 +10,11 @@
   padding: var(--space-2) var(--space-4);
   background: var(--color-accent);
   color: var(--color-accent-text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
   border-radius: var(--radius-md);
-  z-index: 9999;
-  transition: top var(--duration-fast) var(--ease-out);
+  z-index: calc(var(--z-toast) + 1);
+  transition: top var(--duration-quick) var(--ease-out);
 }
 
 .skip-link:focus {
@@ -20,20 +24,16 @@
 .app {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-main {
   flex: 1;
   position: relative;
   margin-left: 0;
-  
   background-color: var(--color-bg-secondary);
-  border-top-left-radius: var(--radius-xl);
-  border-bottom-left-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
   overflow: hidden;
-
-  transition: margin-left 0.4s var(--ease-out);
+  transition: margin-left var(--duration-deliberate) var(--ease-spring-smooth);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -46,7 +46,6 @@
   margin-left: var(--sidebar-width);
 }
 
-/* On mobile, don't shift main content — sidebar overlays */
 @media (max-width: 768px) {
   .app.sidebar-open .app-main {
     margin-left: 0;

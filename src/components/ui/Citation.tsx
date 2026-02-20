@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
+import Icon from './Icon';
 import './Citation.css';
 
 interface CitationProps {
@@ -11,10 +12,24 @@ interface CitationProps {
 }
 
 const Citation: React.FC<CitationProps> = ({ id, source }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!source) {
-    // Fallback if source not found for this ID
     return <span className="citation-badge-fallback">[{id}]</span>;
   }
+
+  const handleCopyCitation = async () => {
+    const text = source.url
+      ? `[${id}] ${source.title} — ${source.url}`
+      : `[${id}] ${source.title}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Ignore
+    }
+  };
 
   return (
     <Popover.Root>
@@ -30,21 +45,26 @@ const Citation: React.FC<CitationProps> = ({ id, source }) => {
           </div>
           <div className="citation-body">
             <p className="citation-title">{source.title}</p>
-            {source.url && (
-              <a 
-                href={source.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="citation-link"
-              >
-                Abrir enlace externo
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-              </a>
-            )}
+            <div className="citation-actions">
+              {source.url && (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="citation-link"
+                >
+                  <Icon name="external-link" size={12} />
+                  Abrir enlace
+                </a>
+              )}
+              <button className="citation-copy-btn" onClick={handleCopyCitation}>
+                {copied ? (
+                  <><Icon name="check" size={12} /> Copiada</>
+                ) : (
+                  <><Icon name="copy" size={12} /> Copiar cita</>
+                )}
+              </button>
+            </div>
           </div>
           <Popover.Arrow className="citation-popover-arrow" />
         </Popover.Content>
