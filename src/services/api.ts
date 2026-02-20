@@ -53,7 +53,15 @@ export async function generateSmartTitle(firstMessage: string): Promise<string> 
       })
     });
 
-    if (!response.ok) throw new Error('Failed to generate title');
+    if (!response.ok) {
+      try {
+        const fallbackData = await response.json();
+        if (fallbackData.title) return fallbackData.title;
+      } catch (e) {
+        // Ignore pars error on failure response
+      }
+      throw new Error(`Failed to generate title: HTTP ${response.status}`);
+    }
     
     const data = await response.json();
     return data.title || generateTitle(firstMessage);
@@ -132,10 +140,44 @@ export async function streamChat(
             return; // Expected explicit stop, do not retry and do not throw to UI
         }
         if (signal?.aborted) {
-            // User aborted, do nothing (or rethrow if library requires)
              throw err; 
         }
-        // Rethrow to stop retries if desired, or handle retry logic
+
+        // --- EXPONENTIAL BACKOFF WITH FULL JITTER ---
+        const maxRetries = 4;
+        const msg = (err as Error).message || '';
+        
+        // Determinar si el error es elegible para reintento (429 Too Many Requests, 500+ Server Errors, Network drops)
+        const isRetriable = 
+          msg.includes('429') || 
+          msg.includes('502') || 
+          msg.includes('503') || 
+          msg.includes('504') || 
+          msg.includes('Failed to fetch') || 
+          msg.includes('NetworkError');
+
+        if (isRetriable) {
+            // Track retries within a closure variable maintained by fetchEventSource context
+            // @ts-ignore (injecting ad-hoc property on error object since we don't control the runner state easily)
+            err._retries = (err._retries || 0) + 1;
+            
+            // @ts-ignore
+            if (err._retries <= maxRetries) {
+                // @ts-ignore
+                const attempt = err._retries;
+                // Calculate base delay: 1000ms * 2^attempt (1s, 2s, 4s, 8s)
+                const baseDelay = 1000 * Math.pow(2, attempt);
+                // Introduce Full Jitter to avoid thunderous herd effect: random value between 0 and baseDelay
+                const jitterDelay = Math.random() * baseDelay;
+                
+                console.warn(`[Lexia Network] Interrupción SSE detectada. Executando Backoff (Intento ${attempt}/${maxRetries}). Esperando ${Math.round(jitterDelay)}ms...`);
+                
+                // Return numerical value explicitly instructs @microsoft/fetch-event-source to wait N ms and retry!
+                return jitterDelay; 
+            }
+        }
+        
+        // Rethrow to stop retries if exhausted or not retriable
         throw err;
       }
     });

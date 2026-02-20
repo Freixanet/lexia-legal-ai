@@ -181,4 +181,4 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
   );
 };
 
-export default MessageBubble;
+export default React.memo(MessageBubble);

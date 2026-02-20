@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { get, set } from 'idb-keyval';
 import { streamChat, generateId, generateTitle, generateSmartTitle, type Message, type Conversation, type Attachment } from '../services/api';
+import { streamStore } from '../store/streamStore';
 
 const STORAGE_KEY_CONVERSATIONS = 'lexia_conversations';
 
@@ -9,12 +10,12 @@ export function useChat() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const conversationsRef = useRef(conversations);
   const isInitialLoad = useRef(true);
+  const isLoadFailed = useRef(false);
 
   // Keep ref in sync ensuring async callbacks always have latest state
   useEffect(() => {
@@ -31,18 +32,40 @@ export function useChat() {
         if (idbData && idbData.length > 0) {
           setConversations(idbData);
         } else {
-          // Migration from localStorage
-          const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
-          if (localDataRaw) {
-            const localData = JSON.parse(localDataRaw) as Conversation[];
-            setConversations(localData);
-            await set(STORAGE_KEY_CONVERSATIONS, localData);
-            localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
-            console.log("Migrated discussions from localStorage to IndexedDB");
+          // Migration from localStorage with Cross-Tab Synchronization (Web Locks API)
+          if (typeof navigator !== 'undefined' && navigator.locks) {
+            await navigator.locks.request('lexia_migration_lock', async () => {
+              // Re-check IDB inside lock to prevent double migration if another tab beat us to it
+              const doubleCheckIdb = await get<Conversation[]>(STORAGE_KEY_CONVERSATIONS);
+              if (doubleCheckIdb && doubleCheckIdb.length > 0) {
+                setConversations(doubleCheckIdb);
+                return;
+              }
+
+              const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
+              if (localDataRaw) {
+                const localData = JSON.parse(localDataRaw) as Conversation[];
+                setConversations(localData);
+                await set(STORAGE_KEY_CONVERSATIONS, localData);
+                localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
+                console.log("Migrated discussions from localStorage to IndexedDB atomically");
+              }
+            });
+          } else {
+            // Fallback for non-supporting browsers (eg old Safari)
+            const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
+            if (localDataRaw) {
+              const localData = JSON.parse(localDataRaw) as Conversation[];
+              setConversations(localData);
+              await set(STORAGE_KEY_CONVERSATIONS, localData);
+              localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
+              console.log("Migrated without lock (not supported)");
+            }
           }
         }
       } catch (err) {
         console.error("Failed to load conversations from IndexedDB", err);
+        isLoadFailed.current = true; // Activar testigo criptográfico de corrupción
       } finally {
         setIsLoaded(true);
       }
@@ -52,6 +75,13 @@ export function useChat() {
 
   // Persist conversations
   useEffect(() => {
+    // Si la lectura inicial en IDB falló estrepitosamente, castrar la habilidad 
+    // de escritura del useEffect permanentemente para proteger la base de datos de borrado accidental en caliente
+    if (isLoadFailed.current) {
+        console.warn("[Lexia Storage Guard] Persistencia suspendida preventivamente. Carga DB originaria abortada.");
+        return;
+    }
+
     if (isInitialLoad.current) {
       if (isLoaded) {
           isInitialLoad.current = false;
@@ -148,7 +178,7 @@ export function useChat() {
 
       // Start streaming
       setIsStreaming(true);
-      setStreamingContent('');
+      streamStore.setContent('');
 
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -186,7 +216,7 @@ export function useChat() {
       // Fire and forget the stream so the UI can navigate instantly and show loading state
       streamChat(allMessages, {
         onToken: (token) => {
-          setStreamingContent((prev) => prev + token);
+          streamStore.append(token);
         },
         onComplete: (fullText) => {
           const assistantMessage: Message = {
@@ -208,12 +238,12 @@ export function useChat() {
           );
 
           setIsStreaming(false);
-          setStreamingContent('');
+          streamStore.setContent('');
         },
         onError: (errorMsg) => {
           setError(errorMsg);
           setIsStreaming(false);
-          setStreamingContent('');
+          streamStore.setContent('');
         },
       }, {
         jurisdiction: options?.jurisdiction ?? 'es',
@@ -228,7 +258,7 @@ export function useChat() {
   const stopStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
     setIsStreaming(false);
-    setStreamingContent('');
+    streamStore.setContent('');
   }, []);
 
   const clearAllConversations = useCallback(() => {
@@ -243,7 +273,6 @@ export function useChat() {
     activeConversationId,
     setActiveConversationId,
     isStreaming,
-    streamingContent,
     error,
     createConversation,
     deleteConversation,

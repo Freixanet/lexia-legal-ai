@@ -67,8 +67,8 @@
 }
 
 .sidebar-close-btn {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -149,6 +149,7 @@
   display: flex;
   align-items: center;
   min-width: 0;
+  min-height: 44px; /* Apple HIG minimum touch target */
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
@@ -176,10 +177,6 @@
    Let's leave it as is for now. 
 */
 
-.sidebar-conv-item.active {
-  /* background is handled by container hover? No. */
-}
-
 /* Re-applying active background logic if needed, but container strategy is better */
 .sidebar-item-container:has(.sidebar-conv-item.active) {
   background: var(--color-accent-subtle);
@@ -199,8 +196,8 @@
 }
 
 .sidebar-kebab-btn {
-  width: 26px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +247,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px 8px;
+  padding: 8px 12px;
+  min-height: 44px; /* Touch target fix */
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   border-radius: var(--radius-sm);
@@ -306,6 +304,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
+  min-height: 44px; /* Touch Target Compliance */
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--color-text-tertiary);
@@ -345,8 +344,8 @@
 }
 
 .settings-close {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -391,6 +390,14 @@
 .settings-select:focus {
   border-color: var(--color-accent);
   outline: none;
+}
+
+/* iOS WebKit Auto-Zoom Prevention: Inputs must be exactly 16px to prevent layout crash */
+@media (max-width: 768px) {
+  .settings-input,
+  .settings-select {
+    font-size: 16px;
+  }
 }
 
 .settings-select {

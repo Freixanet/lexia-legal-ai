@@ -14,12 +14,13 @@
 
 
   z-index: 100;
-  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translate3d(0, 0, 0); /* Force Hardware Acceleration baseline */
 }
 
 /* Shift right when sidebar open on desktop */
 .sidebar-open .topbar {
-  left: var(--sidebar-width);
+  transform: translate3d(var(--sidebar-width), 0, 0);
 }
 
 /* ---- Logo (escape hatch → home) ---- */
@@ -30,10 +31,12 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   transition: all var(--duration-fast) var(--ease-out);
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
 }
 
 .topbar-logo:hover {
@@ -80,6 +83,9 @@
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
   white-space: nowrap;
+  
+  /* Apple HIG: Generous Touch Target padding ensuring minimum interactive space */
+  min-height: 44px;
 }
 
 .topbar-new-btn:hover,
@@ -106,7 +112,7 @@
 
   /* Don't shift on mobile — sidebar overlays */
   .sidebar-open .topbar {
-    left: 0;
+    transform: translate3d(0, 0, 0);
   }
 
   /* Hide text labels on mobile, icon-only buttons */

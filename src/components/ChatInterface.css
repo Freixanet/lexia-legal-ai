@@ -153,6 +153,17 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--space-4);
+  overflow-anchor: auto; /* Enable hardware-accelerated auto-scroll */
+}
+
+/* Pseudo-element for scroll anchoring */
+.chat-messages * {
+  overflow-anchor: none; /* Disable anchoring for all inner elements to force anchor on the end node */
+}
+
+.scroll-anchor {
+  overflow-anchor: auto; /* Re-enable just for the invisible bottom node */
+  height: 1px;
 }
 
 .chat-messages-container {

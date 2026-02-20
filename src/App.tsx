@@ -1,12 +1,14 @@
 import { AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useChat } from './hooks/useChat';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
-import LandingPage from './components/LandingPage';
-import ChatInterface from './components/ChatInterface';
 import './App.css';
+
+// Lazy loaded routes for Code Splitting
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const ChatInterface = lazy(() => import('./components/ChatInterface'));
 
 function App() {
   const navigate = useNavigate();
@@ -19,7 +21,6 @@ function App() {
     activeConversationId,
     setActiveConversationId,
     isStreaming,
-    streamingContent,
     error,
     createConversation,
     deleteConversation,
@@ -117,31 +118,32 @@ function App() {
       />
 
       <main id="main-content" className="app-main">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={
-              <LandingPage key="landing-page" onSendMessage={handleSendMessage} />
-            } />
-            <Route path="/c/:id" element={
-              activeConversation ? (
-                <ChatInterface
-                  key="chat-interface"
-                  conversation={activeConversation}
-                  isStreaming={isStreaming}
-                  streamingContent={streamingContent}
-                  error={error}
-                  onSendMessage={handleSendMessage}
-                  onStopStreaming={stopStreaming}
-                  draftConfig={draftConfig}
-                />
-              ) : (
-                <div style={{ padding: '2rem', color: 'var(--color-primary-light)', textAlign: 'center' }}>
-                  Conversación no encontrada.
-                </div>
-              )
-            } />
-          </Routes>
-        </AnimatePresence>
+        <Suspense fallback={<div className="app" style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }} />}>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={
+                <LandingPage key="landing-page" onSendMessage={handleSendMessage} />
+              } />
+              <Route path="/c/:id" element={
+                activeConversation ? (
+                  <ChatInterface
+                    key="chat-interface"
+                    conversation={activeConversation}
+                    isStreaming={isStreaming}
+                    error={error}
+                    onSendMessage={handleSendMessage}
+                    onStopStreaming={stopStreaming}
+                    draftConfig={draftConfig}
+                  />
+                ) : (
+                  <div style={{ padding: '2rem', color: 'var(--color-primary-light)', textAlign: 'center' }}>
+                    Conversación no encontrada.
+                  </div>
+                )
+              } />
+            </Routes>
+          </AnimatePresence>
+        </Suspense>
       </main>
     </div>
   );

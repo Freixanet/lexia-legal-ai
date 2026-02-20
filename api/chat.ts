@@ -57,8 +57,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
   }
 
-  // Rate limiting
-  const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 'unknown';
+  // Rate limiting & Security: Robust IP extraction
+  // 1. Prioridad: Cabecera inmutable de Vercel (x-real-ip)
+  let clientIp = (req.headers['x-real-ip'] as string)?.trim();
+
+  // 2. Fallback: Parseo estricto de x-forwarded-for de derecha a izquierda
+  if (!clientIp) {
+    const xff = req.headers['x-forwarded-for'] as string;
+    if (xff) {
+      const ips = xff.split(',').map(ip => ip.trim()).reverse();
+      // Eliminar IPs de rango privado o loopback
+      const isPrivate = (ip: string) => /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.|::1)/.test(ip);
+      clientIp = ips.find(ip => !isPrivate(ip)) || ips[0];
+    }
+  }
+  
+  clientIp = clientIp || 'unknown';
   
   const rateLimitResult = await checkRateLimit(clientIp);
   
@@ -94,14 +108,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       };
 
-      const titleRes = await fetch(GEMINI_API_URL.replace('streamGenerateContent?alt=sse&', 'generateContent?'), {
+      const titleUrl = new URL(GEMINI_API_URL);
+      titleUrl.pathname = titleUrl.pathname.replace('streamGenerateContent', 'generateContent');
+      titleUrl.searchParams.delete('alt');
+
+      const titleRes = await fetch(titleUrl.toString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(geminiBodyTitle),
       });
 
       if (!titleRes.ok) {
-        return res.status(500).json({ title: messages[0].content.substring(0, 30) + '...' });
+        // 206 Partial Content indicates a fallback/truncated title was generated due to upstream failure
+        return res.status(206).json({ title: messages[0].content.substring(0, 30) + '...' });
       }
 
       const data = await titleRes.json();
@@ -182,11 +201,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     }
 
+    // Instanciar AbortController para propagar la cancelación de la petición SSE
+    const controller = new AbortController();
+    req.on('close', () => {
+      controller.abort();
+    });
+
     // Call Gemini
     const geminiResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(geminiBody),
+      signal: controller.signal,
     });
 
     if (!geminiResponse.ok) {

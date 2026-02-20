@@ -4,11 +4,12 @@ import MessageBubble from './MessageBubble';
 import ErrorCard from './ErrorCard';
 import type { Conversation, Attachment } from '../services/api';
 import './ChatInterface.css';
+import Worker from '../workers/fileProcessor?worker';
+import { streamStore } from '../store/streamStore';
 
 interface ChatInterfaceProps {
   conversation: Conversation;
   isStreaming: boolean;
-  streamingContent: string;
   error: string | null;
   onSendMessage: (message: string, options?: { attachment?: Attachment }) => void;
   onStopStreaming: () => void;
@@ -18,10 +19,49 @@ interface ChatInterfaceProps {
   }
 }
 
+const StreamingBubble: React.FC = () => {
+  const [content, setContent] = useState(streamStore.getContent());
+  
+  useEffect(() => {
+      const unsubscribe = streamStore.subscribe(setContent);
+      return () => { unsubscribe(); };
+  }, []);
+
+  if (!content) {
+      return (
+          <div className="chat-loading" role="status" aria-label="Procesando respuesta">
+            <div className="chat-loading-avatar" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+                <path d="M8 24V8h2.5v13.5H20V24H8Z" fill="currentColor"/>
+                <circle cx="23" cy="10" r="2.5" fill="currentColor" opacity="0.6"/>
+              </svg>
+            </div>
+            <div className="chat-loading-dots" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <span className="visually-hidden">Lexia está escribiendo...</span>
+          </div>
+      );
+  }
+
+  return (
+      <MessageBubble
+          message={{
+              id: 'streaming',
+              role: 'assistant',
+              content,
+              timestamp: Date.now(),
+          }}
+          isStreaming={true}
+      />
+  );
+};
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   conversation,
   isStreaming,
-  streamingContent,
   error,
   onSendMessage,
   onStopStreaming,
@@ -30,9 +70,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [input, setInput] = useState(() => draftConfig.getDraft(conversation.id));
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
   
-  const chatMessagesRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,21 +87,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    const container = chatMessagesRef.current;
-    if (!container) return;
 
-    // Check if user is scrolled to the bottom (within 100px tolerance)
-    const isScrolledToBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-    
-    // Only auto-scroll if user is already at the bottom OR we are not actively streaming (e.g. initial load)
-    if (!isStreaming || isScrolledToBottom) {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      messagesEndRef.current?.scrollIntoView({
-        behavior: mediaQuery.matches ? 'auto' : 'smooth'
-      });
-    }
-  }, [conversation.messages, streamingContent, isStreaming]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -82,22 +107,59 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Prevent files > 2.5MB for Vercel Edge 4MB payload limit
-    if (file.size > 2.5 * 1024 * 1024) {
-      alert("El documento es demasiado grande (máx 2.5MB para mantener el límite del servidor).");
+    // We can relax limits for images since we compress them, but keep 2.5MB for PDFs
+    if (!file.type.startsWith('image/') && file.size > 2.5 * 1024 * 1024) {
+      alert("El documento PDF es demasiado grande (máx 2.5MB para mantener el límite del servidor).");
       return;
     }
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setPendingAttachment({
-        name: file.name,
-        type: file.type,
-        data: base64
-      });
+    setIsProcessingFile(true);
+    
+    const worker = new Worker();
+    
+    worker.onmessage = (event) => {
+      if (event.data.success) {
+        let base64Data = event.data.base64; // Fallback compat
+        
+        // Zero-Copy IPC Reception: Rehydrate DataURL on the Main Thread
+        if (event.data.isBuffer && event.data.buffer) {
+           const blob = new Blob([event.data.buffer], { type: event.data.type });
+           // Convert back to DataURL strictly for application state (React UI + API consumption)
+           // The heavy lifting (compression, sizing) is already done, so this is significantly lighter
+           const reader = new FileReader();
+           reader.onloadend = () => {
+              setPendingAttachment({
+                name: file.name,
+                type: event.data.type,
+                data: reader.result as string
+              });
+              setIsProcessingFile(false);
+              worker.terminate();
+           };
+           reader.readAsDataURL(blob);
+           return; // Early return to let the async reader finish
+        } else {
+            setPendingAttachment({
+              name: file.name,
+              type: event.data.type,
+              data: base64Data
+            });
+        }
+      } else {
+        alert("Hubo un error al procesar el archivo: " + event.data.error);
+      }
+      setIsProcessingFile(false);
+      worker.terminate();
     };
-    reader.readAsDataURL(file);
+
+    worker.onerror = (error) => {
+      alert("Error en proceso de archivo.");
+      setIsProcessingFile(false);
+      worker.terminate();
+    };
+
+    worker.postMessage({ file });
+    
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -145,7 +207,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Messages Area */}
       <div
-        ref={chatMessagesRef}
         className="chat-messages"
         role="log"
         aria-label="Historial de mensajes"
@@ -166,40 +227,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             ))}
           </AnimatePresence>
 
-          {/* Streaming message — renders tokens directly as they arrive from SSE */}
-          {isStreaming && streamingContent && (
+          {/* Streaming Bubble - Isolated node to avoid parent re-renders */}
+          {isStreaming && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <MessageBubble
-                message={{
-                  id: 'streaming',
-                  role: 'assistant',
-                  content: streamingContent,
-                  timestamp: Date.now(),
-                }}
-                isStreaming={true}
-              />
+              <StreamingBubble />
             </motion.div>
-          )}
-
-          {/* Loading indicator */}
-          {isStreaming && !streamingContent && (
-            <div className="chat-loading" role="status" aria-label="Procesando respuesta">
-              <div className="chat-loading-avatar" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                  <path d="M8 24V8h2.5v13.5H20V24H8Z" fill="currentColor"/>
-                  <circle cx="23" cy="10" r="2.5" fill="currentColor" opacity="0.6"/>
-                </svg>
-              </div>
-              <div className="chat-loading-dots" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              <span className="visually-hidden">Lexia está escribiendo...</span>
-            </div>
           )}
 
           {error && (
@@ -208,7 +243,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {/* Scroll Anchor */}
+          <div className="scroll-anchor" />
         </div>
       </div>
 
@@ -249,9 +285,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               />
               <button
                 type="button"
-                className="chat-attach-btn"
+                className={`chat-attach-btn ${isProcessingFile ? 'processing' : ''}`}
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isStreaming}
+                disabled={isStreaming || isProcessingFile}
                 aria-label="Adjuntar documento"
                 title="Adjuntar PDF o Imagen"
               >
@@ -269,7 +305,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onKeyDown={handleKeyDown}
               placeholder="Describe tu duda legal..."
               rows={1}
-              disabled={isStreaming}
+              disabled={isStreaming || isProcessingFile}
               aria-label="Escribe tu consulta legal"
             />
             <div className="chat-input-actions">
@@ -290,7 +326,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   id="chat-send-btn"
                   type="submit"
                   className="chat-send-btn"
-                  disabled={!input.trim() && !pendingAttachment}
+                  disabled={(!input.trim() && !pendingAttachment) || isProcessingFile}
                   aria-label="Enviar mensaje"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
