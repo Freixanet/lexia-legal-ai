@@ -119,10 +119,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
             <span className="headline-serif">con inteligencia artificial</span>
           </h1>
 
-          <p className="landing-subtitle">
-            Lexia es tu asistente legal inteligente. Haz cualquier pregunta sobre derecho
-            y recibe respuestas claras, estructuradas y con referencias legales.
-          </p>
         </header>
 
         {/* Search / Ask Bar */}
