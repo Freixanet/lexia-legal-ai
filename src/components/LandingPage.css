@@ -10,7 +10,7 @@
   overflow: hidden; /* Forzar no scroll */
 }
 
-/* Subtle radial gradient background */
+/* Subtle radial gradient background - Adjusted for Light Theme */
 .landing::before {
   content: '';
   position: absolute;
@@ -20,8 +20,8 @@
   height: 100%;
   background: radial-gradient(
     ellipse at 50% 20%,
-    rgba(201, 168, 76, 0.06) 0%,
-    rgba(201, 168, 76, 0.02) 30%,
+    rgba(15, 23, 42, 0.03) 0%,
+    rgba(15, 23, 42, 0.01) 30%,
     transparent 60%
   );
   pointer-events: none;
@@ -118,17 +118,19 @@
 .landing-search-container {
   display: flex;
   align-items: center;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-xl);
+  background: var(--color-bg-elevated);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
-  transition: all var(--duration-normal) var(--ease-out);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lx-shadow-glass);
+  transition: box-shadow var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
 }
 
 .landing-search-container:focus-within {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-lg), 0 0 0 4px var(--color-accent-subtle);
+  box-shadow: 0 12px 48px -8px rgba(15, 23, 42, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
 }
 
 .landing-search-icon {
@@ -246,12 +248,17 @@
   background: var(--color-accent);
   color: var(--color-accent-text);
   flex-shrink: 0;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring);
+  box-shadow: var(--lx-shadow-button);
 }
 
 .landing-search-btn:hover:not(:disabled) {
   background: var(--color-accent-hover);
-  transform: scale(1.05);
+  transform: scale(1.03);
+}
+
+.landing-search-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .landing-search-btn:disabled {

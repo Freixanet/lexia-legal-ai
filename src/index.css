@@ -35,45 +35,42 @@
 }
 
 :root {
-  /* Colors - Dark Mode Default */
-  --color-bg-primary: #0a0f1c;
-  --color-bg-secondary: #111827;
-  --color-bg-tertiary: #1a2236;
-  --color-bg-elevated: #1e2a3f;
-  --color-bg-hover: #232f47;
-  --color-bg-input: #141c2e;
+  /* LEXIA LEGAL AI - CORE DESIGN SYSTEM (V2.0 FLAWLESS) */
+  /* Paleta Acromática de Alta Fidelidad */
+  --color-bg-primary: #F8F9FB; /* Canvas Baseline */
+  --color-bg-secondary: #FFFFFF; /* Surface Base */
+  --color-bg-tertiary: #F1F5F9;
+  --color-bg-elevated: rgba(255, 255, 255, 0.75); /* Surface Elevated */
+  --color-bg-hover: rgba(15, 23, 42, 0.04);
+  --color-bg-input: rgba(255, 255, 255, 0.75);
 
-  --color-surface: rgba(255, 255, 255, 0.03);
-  --color-surface-hover: rgba(255, 255, 255, 0.06);
-  --color-surface-active: rgba(255, 255, 255, 0.08);
+  --color-surface: #FFFFFF;
+  --color-surface-hover: rgba(15, 23, 42, 0.03);
+  --color-surface-active: rgba(15, 23, 42, 0.06);
 
-  --color-text-primary: #f0ece4;
-  --color-text-secondary: #cbd5e1; /* Lighter, better contrast */
-  --color-text-tertiary: #94a3b8; /* Was 6b7280 */
+  /* Sistema de Acentos (Oxford Ink & Graphite) */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
   
-  /* New Tokens */
-  --color-text-dim: #94a3b8;    /* Use for timestamps, subtitles (accessible) */
-  --color-text-disabled: #475569; /* Only for disabled states or decorative */
-  
-  /* Deprecated/Mapped for backward compat, but safer */
-  --color-text-muted: #64748b;  /* Was 4b5563 - bumped up slightly */
+  --color-text-dim: #9CA3AF;
+  --color-text-disabled: #D1D5DB;
 
-  --color-accent: #c9a84c;
-  --color-accent-hover: #d4b65e;
-  --color-accent-subtle: rgba(201, 168, 76, 0.12);
-  --color-accent-text: #0a0f1c;
+  --color-accent: #0F172A; /* Oxford Ink Core */
+  --color-accent-hover: #1E293B;
+  --color-accent-subtle: rgba(15, 23, 42, 0.06);
+  --color-accent-text: #FFFFFF;
 
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border: rgba(15, 23, 42, 0.08); /* Suave Border */
+  --color-border-strong: rgba(15, 23, 42, 0.15); /* Stronger Border */
 
-  --color-success: #34d399;
-  --color-error: #f87171;
-  --color-warning: #fbbf24;
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
 
-  /* Typography */
-  --font-sans:
-    "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Motor Tipográfico Dual */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -120,16 +117,26 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 40px rgba(201, 168, 76, 0.1);
+  /* Sombras Físicas Multicanal (Profundidad Realista) */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.08); /* Clean drop shadow */
+  --shadow-xl: -12px 0 48px -12px rgba(15, 23, 42, 0.06); /* Main Canvas lift */
+  --shadow-glow: 0 0 40px rgba(15, 23, 42, 0.04);
+  
+  --lx-shadow-glass: 
+    0 8px 32px -4px rgba(15, 23, 42, 0.06), 
+    0 24px 64px -8px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  
+  --lx-shadow-button: 
+    0 2px 4px rgba(15, 23, 42, 0.06), 
+    0 4px 12px rgba(15, 23, 42, 0.08);
 
-  /* Transitions */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Cinética (Curvas de Bézier Nativas de iOS/macOS) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* --lx-ease-out-fluid */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy Button */
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
@@ -138,7 +145,7 @@
   /* Layout */
   --sidebar-width: 280px;
   --header-height: 60px;
-  --chat-max-width: 780px;
+  --chat-max-width: 850px;
   --content-max-width: 1100px;
 }
 
@@ -399,7 +406,7 @@ textarea {
 }
 
 .markdown-content pre {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary); /* Sub-canvas */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);

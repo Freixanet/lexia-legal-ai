@@ -26,6 +26,13 @@
   flex: 1;
   position: relative;
   margin-left: 0;
+  
+  /* Lexia V2.0: Main Canvas Physics */
+  background-color: var(--color-bg-secondary);
+  border-top-left-radius: var(--radius-xl);
+  border-bottom-left-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden; /* Avoid overflowing the curves */
 
   transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }

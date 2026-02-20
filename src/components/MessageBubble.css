@@ -47,12 +47,17 @@
   line-height: var(--leading-relaxed);
 }
 
+/* User Message Design: App-Store like bubble */
 .message-user .message-body {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
-  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  background-color: var(--color-bg-primary); /* Use Canvas color inside Surface container */
+  padding: 16px 24px;
+  border-radius: 16px 16px 4px 16px;
+  align-self: flex-end;
+  color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.03);
 }
 
 .message-user .message-body p {
@@ -61,7 +66,11 @@
   word-break: break-word;
 }
 
+/* Lexia Intelligence Design: Premium Legal typography */
 .message-assistant .message-body {
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  line-height: 1.75;
   color: var(--color-text-primary);
 }
 
@@ -140,8 +149,8 @@
 }
 
 .message-copy-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text-primary);
+  background: var(--color-surface-active);
+  color: var(--color-accent);
 }
 
 /* ─── Reduced motion ─── */
