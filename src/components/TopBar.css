@@ -59,7 +59,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: var(--color-accent);
+  color: var(--color-text-primary); /* Oxford in Light, White in Dark */
 }
 
 /* ---- Right actions ---- */

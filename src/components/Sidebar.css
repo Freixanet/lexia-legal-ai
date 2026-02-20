@@ -62,7 +62,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: var(--color-accent); /* lx-accent-core */
+  color: var(--color-text-primary); /* Oxford Ink in light, White in dark */
 }
 
 .sidebar-close-btn {
