@@ -121,7 +121,15 @@ function App() {
   }, [createConversation, navigate]);
 
   const handleGoHome = useCallback(() => {
+    setSidebarOpen(false);
     navigate('/');
+    // Hard fallback if router navigation is blocked by any runtime edge case.
+    setTimeout(() => {
+      const base = import.meta.env.BASE_URL || '/';
+      if (window.location.pathname !== base && window.location.pathname !== '/') {
+        window.location.assign(base);
+      }
+    }, 120);
   }, [navigate]);
 
   const handleToggleSidebar = useCallback(() => {
@@ -174,6 +182,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           activeConversationId={activeConversationId}
+          onGoHome={handleGoHome}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onDeleteConversation={handleDeleteConversation}

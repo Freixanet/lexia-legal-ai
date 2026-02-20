@@ -26,16 +26,20 @@ const TopBar: React.FC<TopBarProps> = ({
 }) => {
   return (
     <header className="topbar" role="banner">
-      <button
+      <a
         className="topbar-logo"
-        onClick={onGoHome}
+        href={import.meta.env.BASE_URL}
+        onClick={(e) => {
+          e.preventDefault();
+          onGoHome();
+        }}
         aria-label="Volver al inicio"
       >
         <div className="topbar-logo-icon" aria-hidden="true">
           <LexiaLogo size={16} />
         </div>
         <span className="topbar-logo-text">Lexia</span>
-      </button>
+      </a>
 
       <div className="topbar-actions">
         {/* Design version toggle */}

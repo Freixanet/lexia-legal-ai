@@ -9,6 +9,7 @@ import './Sidebar.css';
 interface SidebarProps {
   conversations: Conversation[];
   activeConversationId: string | null;
+  onGoHome: () => void;
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
@@ -22,6 +23,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
   conversations,
   activeConversationId,
+  onGoHome,
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
@@ -151,12 +153,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         aria-label="Historial de conversaciones"
       >
         <div className="sidebar-header">
-          <div className="sidebar-logo">
+          <button
+            className="sidebar-logo"
+            onClick={() => {
+              onGoHome();
+              onClose();
+            }}
+            aria-label="Volver al inicio"
+          >
             <div className="sidebar-logo-icon" aria-hidden="true">
               <LexiaLogo size={18} />
             </div>
             <span className="sidebar-logo-text">Lexia</span>
-          </div>
+          </button>
           <button className="sidebar-close-btn" onClick={onClose} aria-label="Cerrar historial">
             <Icon name="close" size={18} />
           </button>
