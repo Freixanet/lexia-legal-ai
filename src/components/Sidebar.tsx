@@ -156,6 +156,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           <button
             className="sidebar-logo"
             onClick={() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7694/ingest/c16cdd1e-5739-4aec-9ebc-33369bb623e8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'992196'},body:JSON.stringify({sessionId:'992196',runId:'run-1',hypothesisId:'H2',location:'Sidebar.tsx:159',message:'Sidebar logo click handler fired',data:{sidebarIsOpen:isOpen,pathname:window.location.pathname},timestamp:Date.now()})}).catch(()=>{});
+              // #endregion
               onGoHome();
               onClose();
             }}

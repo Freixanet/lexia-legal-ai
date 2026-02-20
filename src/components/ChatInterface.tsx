@@ -90,11 +90,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + 'px';
     }
-    draftConfig.saveDraft(conversation.id, input);
-  }, [input, conversation.id, draftConfig]);
+  }, [input]);
 
   useEffect(() => {
-    setInput(draftConfig.getDraft(conversation.id));
+    const draft = draftConfig.getDraft(conversation.id);
+    setInput(draft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.id]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    draftConfig.saveDraft(conversation.id, value);
   }, [conversation.id, draftConfig]);
 
   const handleScroll = useCallback(() => {
@@ -181,6 +188,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if ((!trimmed && !pendingAttachment) || isStreaming) return;
     onSendMessage(trimmed, { attachment: pendingAttachment || undefined });
     setInput('');
+    draftConfig.saveDraft(conversation.id, '');
     setPendingAttachment(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
@@ -341,7 +349,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               ref={textareaRef}
               className="chat-input"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Describe tu duda legal..."
               rows={1}

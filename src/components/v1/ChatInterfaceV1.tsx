@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MessageBubbleV1 from './MessageBubbleV1';
 import ErrorCardV1 from './ErrorCardV1';
@@ -67,10 +67,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, isStreaming
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + 'px';
     }
-    draftConfig.saveDraft(conversation.id, input);
-  }, [input, conversation.id, draftConfig]);
+  }, [input]);
 
-  useEffect(() => { setInput(draftConfig.getDraft(conversation.id)); }, [conversation.id, draftConfig]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setInput(draftConfig.getDraft(conversation.id)); }, [conversation.id]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    draftConfig.saveDraft(conversation.id, value);
+  }, [conversation.id, draftConfig]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -112,6 +118,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, isStreaming
     if ((!trimmed && !pendingAttachment) || isStreaming) return;
     onSendMessage(trimmed, { attachment: pendingAttachment || undefined });
     setInput('');
+    draftConfig.saveDraft(conversation.id, '');
     setPendingAttachment(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
@@ -161,7 +168,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, isStreaming
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
               </button>
             </div>
-            <textarea id="chat-message-input" ref={textareaRef} className="chat-input" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Describe tu duda legal..." rows={1} disabled={isStreaming || isProcessingFile} aria-label="Escribe tu consulta legal" />
+            <textarea id="chat-message-input" ref={textareaRef} className="chat-input" value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Describe tu duda legal..." rows={1} disabled={isStreaming || isProcessingFile} aria-label="Escribe tu consulta legal" />
             <div className="chat-input-actions">
               {isStreaming ? (
                 <button id="chat-stop-btn" type="button" className="chat-stop-btn" onClick={onStopStreaming} aria-label="Detener respuesta">

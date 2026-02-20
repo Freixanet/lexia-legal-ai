@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useChat } from './hooks/useChat';
 import TopBar from './components/TopBar';
@@ -65,7 +65,7 @@ function App() {
   } = useChat();
 
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const draftsRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     let touchStartX = 0;
@@ -87,11 +87,11 @@ function App() {
   }, [sidebarOpen]);
 
   const draftConfig = useMemo(() => ({
-    getDraft: (id: string) => drafts[id] || '',
+    getDraft: (id: string) => draftsRef.current[id] ?? '',
     saveDraft: (id: string, text: string) => {
-      setDrafts((prev) => ({ ...prev, [id]: text }));
+      draftsRef.current[id] = text;
     }
-  }), [drafts]);
+  }), []);
 
   // Parse route: determine if we're on landing or a chat
   const chatIdFromRoute = useMemo(() => {
@@ -123,13 +123,6 @@ function App() {
   const handleGoHome = useCallback(() => {
     setSidebarOpen(false);
     navigate('/');
-    // Hard fallback if router navigation is blocked by any runtime edge case.
-    setTimeout(() => {
-      const base = import.meta.env.BASE_URL || '/';
-      if (window.location.pathname !== base && window.location.pathname !== '/') {
-        window.location.assign(base);
-      }
-    }, 120);
   }, [navigate]);
 
   const handleToggleSidebar = useCallback(() => {
