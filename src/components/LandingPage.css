@@ -7,8 +7,7 @@
   /* Elevate centralized content visually by shifting vertical padding ratio */
   padding: calc(var(--header-height) + var(--space-4)) var(--space-8) var(--space-24);
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* Forzar no scroll */
 }
 
 /* Subtle radial gradient background */
@@ -410,7 +409,8 @@
    ============================================ */
 @media (max-width: 768px) {
   .landing {
-    padding: calc(var(--header-height) + var(--space-12)) var(--space-5) var(--space-5);
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-5) var(--space-5);
+    justify-content: center;
   }
 
   /* Reduce background glow on mobile */
@@ -533,8 +533,8 @@
    ============================================ */
 @media (max-width: 480px) {
   .landing {
-    padding: calc(var(--header-height) + var(--space-10)) var(--space-5) var(--space-5);
-    justify-content: flex-start;
+    padding: calc(var(--header-height) + var(--space-4)) var(--space-4) var(--space-4);
+    justify-content: center; /* Center to avoid bottom cutoff */
   }
 
   .landing::before {
@@ -560,13 +560,13 @@
 
   .landing-subtitle {
     font-size: var(--text-xs);
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-4);
     line-height: var(--leading-relaxed);
     color: var(--color-text-dim);
   }
 
   .landing-search {
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-6);
   }
 
   .landing-search-container {
