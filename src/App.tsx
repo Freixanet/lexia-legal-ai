@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useChat } from './hooks/useChat';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
@@ -51,7 +51,6 @@ function App() {
   const {
     conversations,
     isLoaded,
-    activeConversation,
     activeConversationId,
     setActiveConversationId,
     isStreaming,
@@ -106,22 +105,14 @@ function App() {
   };
 
   useEffect(() => {
-    const match = location.pathname.match(/^\/c\/(.+)$/);
-    if (match && match[1]) {
-      setActiveConversationId(match[1]);
-    } else if (location.pathname === '/') {
+    if (location.pathname === '/') {
       setActiveConversationId(null);
     }
   }, [location.pathname, setActiveConversationId]);
 
   const handleNewConversation = () => {
-    setActiveConversationId(null);
-    if (location.pathname === '/') {
-      const input = document.getElementById('landing-search-input');
-      if (input) input.focus();
-    } else {
-      navigate('/');
-    }
+    const id = createConversation();
+    navigate(`/c/${id}`);
   };
 
   const handleGoHome = () => {
@@ -146,9 +137,38 @@ function App() {
 
   const handleSendMessage = async (content: string, options?: any) => {
     const id = await sendMessage(content, options);
-    if (id && location.pathname === '/') {
+    if (id) {
       navigate(`/c/${id}`);
     }
+  };
+
+  const ChatRoute: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const conversation = conversations.find((c) => c.id === id) || null;
+
+    useEffect(() => {
+      if (id) setActiveConversationId(id);
+    }, [id]);
+
+    const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
+
+    if (!conversation) {
+      return (
+        <SkeletonChat />
+      );
+    }
+
+    return (
+      <ChatInterface
+        key={`chat-${designVersion}-${id}`}
+        conversation={conversation}
+        isStreaming={isStreaming}
+        error={error}
+        onSendMessage={handleSendMessage}
+        onStopStreaming={stopStreaming}
+        draftConfig={draftConfig}
+      />
+    );
   };
 
   if (!isLoaded) {
@@ -156,7 +176,6 @@ function App() {
   }
 
   const LandingPage = designVersion === 'v1' ? LandingPageV1 : LandingPageV2;
-  const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
 
   return (
     <ErrorBoundary>
@@ -199,21 +218,7 @@ function App() {
               } />
               <Route path="/c/:id" element={
                 <Suspense fallback={<SkeletonChat />}>
-                  {activeConversation ? (
-                    <ChatInterface
-                      key={`chat-${designVersion}`}
-                      conversation={activeConversation}
-                      isStreaming={isStreaming}
-                      error={error}
-                      onSendMessage={handleSendMessage}
-                      onStopStreaming={stopStreaming}
-                      draftConfig={draftConfig}
-                    />
-                  ) : (
-                    <div style={{ padding: '2rem', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-                      Conversación no encontrada.
-                    </div>
-                  )}
+                  <ChatRoute />
                 </Suspense>
               } />
             </Routes>
