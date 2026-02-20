@@ -131,6 +131,10 @@
 @media (max-width: 768px) {
   .topbar {
     padding: 0 var(--space-3);
+    border-bottom: none;
+    background: var(--color-bg-secondary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .sidebar-open .topbar {

@@ -341,6 +341,7 @@
 @media (max-width: 768px) {
   .chat-header {
     padding: 0 var(--space-4);
+    border-bottom: none;
   }
 
   .chat-messages {
