@@ -52,9 +52,17 @@ function App() {
   }, [location.pathname, setActiveConversationId]);
 
   const handleNewConversation = () => {
-    // Navigate home, useChat will generate ID on sendMessage
     setActiveConversationId(null);
-    navigate('/');
+    if (location.pathname === '/') {
+      // User is already on Home, improve UX by autofocusing the chat request input
+      // instead of performing a dummy navigation loop
+      const input = document.getElementById('landing-search-input');
+      if (input) {
+         input.focus();
+      }
+    } else {
+      navigate('/');
+    }
   };
 
   const handleGoHome = () => {
