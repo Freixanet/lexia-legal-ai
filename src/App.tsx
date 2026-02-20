@@ -48,6 +48,39 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 769);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
+  // Swipe gesture to open sidebar on mobile
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const minSwipeDistance = 50;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.changedTouches[0].screenX;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const swipeDistance = touchEndX - touchStartX;
+      
+      // Only trigger if swipe started from left edge (first 30px)
+      if (touchStartX < 30 && swipeDistance > minSwipeDistance && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
+      // Swipe left to close
+      if (swipeDistance < -minSwipeDistance && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [sidebarOpen]);
+
   const draftConfig = {
     getDraft: (id: string) => drafts[id] || '',
     saveDraft: (id: string, text: string) => {

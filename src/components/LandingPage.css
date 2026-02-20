@@ -4,10 +4,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* Elevate centralized content visually by shifting vertical padding ratio */
-  padding: calc(var(--header-height) + var(--space-4)) var(--space-8) var(--space-24);
+  padding: calc(var(--header-height) + var(--space-6)) var(--space-8) var(--space-12);
   position: relative;
-  overflow: hidden; /* Forzar no scroll */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Subtle radial gradient background - Adjusted dynamically for Theming */
@@ -76,7 +76,8 @@
 .landing-headline {
   text-align: center;
   margin-bottom: var(--space-6);
-  line-height: var(--leading-tight);
+  line-height: 1.18;
+  padding-bottom: 0.2em;
 }
 
 .headline-serif {
@@ -86,6 +87,7 @@
   font-weight: 400;
   color: var(--color-text-primary);
   letter-spacing: var(--tracking-tight);
+  line-height: 1.08;
 }
 
 .headline-accent {
@@ -95,6 +97,8 @@
   font-weight: 400;
   font-style: italic;
   letter-spacing: var(--tracking-tight);
+  line-height: 1.08;
+  padding-bottom: 0.08em;
   background: linear-gradient(
     135deg,
     var(--color-accent) 0%,
@@ -130,7 +134,7 @@
   -webkit-backdrop-filter: blur(32px) saturate(1.3);
   border: 1px solid var(--color-glass-border);
   border-radius: 20px;
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-2);
   box-shadow: var(--lx-shadow-glass);
   transition: box-shadow var(--duration-normal) var(--ease-out), 
               border-color var(--duration-normal) var(--ease-out),
@@ -153,7 +157,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: var(--space-2);
+  flex-shrink: 0;
 }
 
 .chat-attach-btn {
@@ -449,17 +453,16 @@
    ============================================ */
 @media (max-width: 768px) {
   .landing {
-    padding: calc(var(--header-height) + var(--space-4)) var(--space-5) var(--space-5);
-    justify-content: center;
+    padding: calc(var(--header-height) + var(--space-8)) var(--space-5) var(--space-8);
+    justify-content: flex-start;
   }
 
-  /* Reduce background glow on mobile */
   .landing::before {
     opacity: 0.4;
   }
 
   .landing-badge {
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-6);
   }
 
   .headline-serif,
@@ -470,7 +473,7 @@
   .landing-subtitle {
     max-width: 100%;
     font-size: var(--text-base);
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-8);
   }
 
   .landing-search {
@@ -573,8 +576,8 @@
    ============================================ */
 @media (max-width: 480px) {
   .landing {
-    padding: calc(var(--header-height) + var(--space-4)) var(--space-4) var(--space-4);
-    justify-content: center; /* Center to avoid bottom cutoff */
+    padding: calc(var(--header-height) + var(--space-6)) var(--space-4) var(--space-6);
+    justify-content: flex-start;
   }
 
   .landing::before {
@@ -585,7 +588,7 @@
     font-size: 0.625rem;
     padding: var(--space-1) var(--space-3);
     letter-spacing: var(--tracking-wider);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
   }
 
   .headline-serif,
@@ -594,8 +597,7 @@
   }
 
   .landing-headline {
-    margin-bottom: var(--space-5);
-    padding: 0;
+    margin-bottom: var(--space-4);
   }
 
   .landing-subtitle {
@@ -606,11 +608,11 @@
   }
 
   .landing-search {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-10);
   }
 
   .landing-search-container {
-    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-1);
     border-radius: var(--radius-lg);
   }
 
