@@ -62,12 +62,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7694/ingest/c16cdd1e-5739-4aec-9ebc-33369bb623e8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'992196'},body:JSON.stringify({sessionId:'992196',runId:'run-3',hypothesisId:'H6',location:'LandingPage.tsx:66',message:'LandingPage mounted',data:{pathname:window.location.pathname,headlinePresent:!!document.querySelector('.landing-headline')},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  }, []);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

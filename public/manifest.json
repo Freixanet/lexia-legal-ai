@@ -2,14 +2,14 @@
   "name": "Lexia — Asistente Legal IA",
   "short_name": "Lexia",
   "description": "Tu asistente legal inteligente impulsado por IA. Resuelve tus dudas legales.",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0B0F1A",
   "theme_color": "#0B0F1A",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/lexia-icon.svg",
+      "src": "lexia-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
