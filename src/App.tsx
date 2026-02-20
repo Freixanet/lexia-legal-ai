@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useChat } from './hooks/useChat';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
@@ -71,111 +71,87 @@ function App() {
     let touchStartX = 0;
     let touchEndX = 0;
     const minSwipeDistance = 50;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.changedTouches[0].screenX;
-    };
-
+    const handleTouchStart = (e: TouchEvent) => { touchStartX = e.changedTouches[0].screenX; };
     const handleTouchEnd = (e: TouchEvent) => {
       touchEndX = e.changedTouches[0].screenX;
       const swipeDistance = touchEndX - touchStartX;
-
-      if (touchStartX < 30 && swipeDistance > minSwipeDistance && !sidebarOpen) {
-        setSidebarOpen(true);
-      }
-      if (swipeDistance < -minSwipeDistance && sidebarOpen) {
-        setSidebarOpen(false);
-      }
+      if (touchStartX < 30 && swipeDistance > minSwipeDistance && !sidebarOpen) setSidebarOpen(true);
+      if (swipeDistance < -minSwipeDistance && sidebarOpen) setSidebarOpen(false);
     };
-
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
-
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [sidebarOpen]);
 
-  const draftConfig = {
+  const draftConfig = useMemo(() => ({
     getDraft: (id: string) => drafts[id] || '',
     saveDraft: (id: string, text: string) => {
       setDrafts((prev) => ({ ...prev, [id]: text }));
     }
-  };
+  }), [drafts]);
 
+  // Parse route: determine if we're on landing or a chat
+  const chatIdFromRoute = useMemo(() => {
+    const match = location.pathname.match(/^\/c\/(.+)$/);
+    return match ? match[1] : null;
+  }, [location.pathname]);
+
+  const isLanding = !chatIdFromRoute;
+
+  // Sync activeConversationId with route
   useEffect(() => {
-    if (location.pathname === '/') {
+    if (chatIdFromRoute) {
+      setActiveConversationId(chatIdFromRoute);
+    } else {
       setActiveConversationId(null);
     }
-  }, [location.pathname, setActiveConversationId]);
+  }, [chatIdFromRoute, setActiveConversationId]);
 
-  const handleNewConversation = () => {
+  const activeConversation = useMemo(() => {
+    if (!chatIdFromRoute) return null;
+    return conversations.find((c) => c.id === chatIdFromRoute) || null;
+  }, [chatIdFromRoute, conversations]);
+
+  const handleNewConversation = useCallback(() => {
     const id = createConversation();
     navigate(`/c/${id}`);
-  };
+  }, [createConversation, navigate]);
 
-  const handleGoHome = () => {
-    setActiveConversationId(null);
+  const handleGoHome = useCallback(() => {
     navigate('/');
-  };
+  }, [navigate]);
 
-  const handleToggleSidebar = () => {
+  const handleToggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
-  };
+  }, []);
 
-  const handleSelectConversation = (id: string) => {
+  const handleSelectConversation = useCallback((id: string) => {
     navigate(`/c/${id}`);
-  };
+  }, [navigate]);
 
-  const handleDeleteConversation = (id: string) => {
+  const handleDeleteConversation = useCallback((id: string) => {
     deleteConversation(id);
-    if (activeConversationId === id || location.pathname === `/c/${id}`) {
+    if (activeConversationId === id) {
       navigate('/');
     }
-  };
+  }, [deleteConversation, activeConversationId, navigate]);
 
-  const handleSendMessage = async (content: string, options?: any) => {
+  const handleSendMessage = useCallback(async (content: string, options?: any) => {
     const id = await sendMessage(content, options);
     if (id) {
       navigate(`/c/${id}`);
     }
-  };
-
-  const ChatRoute: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const conversation = conversations.find((c) => c.id === id) || null;
-
-    useEffect(() => {
-      if (id) setActiveConversationId(id);
-    }, [id]);
-
-    const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
-
-    if (!conversation) {
-      return (
-        <SkeletonChat />
-      );
-    }
-
-    return (
-      <ChatInterface
-        key={`chat-${designVersion}-${id}`}
-        conversation={conversation}
-        isStreaming={isStreaming}
-        error={error}
-        onSendMessage={handleSendMessage}
-        onStopStreaming={stopStreaming}
-        draftConfig={draftConfig}
-      />
-    );
-  };
+  }, [sendMessage, navigate]);
 
   if (!isLoaded) {
     return <div className="app" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} />;
   }
 
   const LandingPage = designVersion === 'v1' ? LandingPageV1 : LandingPageV2;
+  const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
 
   return (
     <ErrorBoundary>
@@ -210,18 +186,30 @@ function App() {
 
         <main id="main-content" className="app-main">
           <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname + designVersion}>
-              <Route path="/" element={
-                <Suspense fallback={<SkeletonLanding />}>
-                  <LandingPage key={`landing-${designVersion}`} onSendMessage={handleSendMessage} />
-                </Suspense>
-              } />
-              <Route path="/c/:id" element={
-                <Suspense fallback={<SkeletonChat />}>
-                  <ChatRoute />
-                </Suspense>
-              } />
-            </Routes>
+            {isLanding ? (
+              <Suspense key="landing" fallback={<SkeletonLanding />}>
+                <LandingPage
+                  key={`landing-${designVersion}`}
+                  onSendMessage={handleSendMessage}
+                />
+              </Suspense>
+            ) : (
+              <Suspense key="chat" fallback={<SkeletonChat />}>
+                {activeConversation ? (
+                  <ChatInterface
+                    key={`chat-${designVersion}-${chatIdFromRoute}`}
+                    conversation={activeConversation}
+                    isStreaming={isStreaming}
+                    error={error}
+                    onSendMessage={handleSendMessage}
+                    onStopStreaming={stopStreaming}
+                    draftConfig={draftConfig}
+                  />
+                ) : (
+                  <SkeletonChat key="chat-loading" />
+                )}
+              </Suspense>
+            )}
           </AnimatePresence>
         </main>
       </div>
