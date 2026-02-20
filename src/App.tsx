@@ -145,7 +145,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {/* Skip to main content — a11y */}
       <a href="#main-content" className="skip-link">
         Saltar al contenido principal
