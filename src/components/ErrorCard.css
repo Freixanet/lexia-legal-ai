@@ -74,13 +74,20 @@
 }
 
 .error-btn-primary {
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  box-shadow: var(--lx-shadow-button);
 }
 
 .error-btn-primary:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.error-btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: none;
 }
 
 .error-btn-secondary {
