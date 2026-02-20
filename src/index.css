@@ -32,11 +32,75 @@
 .settings-input:focus-visible,
 .settings-select:focus-visible {
   outline: none;
+:root {
+  /* GLOBAL MOTOR (Common Math and Physics) */
+  /* Motor Tipográfico Dual */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+  --text-hero: clamp(2.5rem, 6vw, 5.5rem);
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Cinética (Curvas de Bézier Nativas de iOS/macOS) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy Button */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --header-height: 60px;
+  --chat-max-width: 850px;
+  --content-max-width: 1100px;
 }
 
-:root {
-  /* LEXIA LEGAL AI - CORE DESIGN SYSTEM (V2.0 FLAWLESS) */
-  /* Paleta Acromática de Alta Fidelidad */
+/* ================== LEXIA PREMIUM CLEAR (LIGHT THEME) =================== */
+:root[data-theme='light'] {
   --color-bg-primary: #F8F9FB; /* Canvas Baseline */
   --color-bg-secondary: #FFFFFF; /* Surface Base */
   --color-bg-tertiary: #F1F5F9;
@@ -68,9 +132,78 @@
   --color-error: #EF4444;
   --color-warning: #F59E0B;
 
-  /* Motor Tipográfico Dual */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  /* Sombras Físicas Multicanal (Claras) */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-xl: -12px 0 48px -12px rgba(15, 23, 42, 0.06);
+  --shadow-glow: 0 0 40px rgba(15, 23, 42, 0.04);
+  
+  --lx-shadow-glass: 
+    0 8px 32px -4px rgba(15, 23, 42, 0.06), 
+    0 24px 64px -8px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  
+  --lx-shadow-button: 
+    0 2px 4px rgba(15, 23, 42, 0.06), 
+    0 4px 12px rgba(15, 23, 42, 0.08);
+    
+  --lx-radial-glow-1: rgba(15, 23, 42, 0.03);
+  --lx-radial-glow-2: rgba(15, 23, 42, 0.01);
+}
+
+/* ================== ORIGINAL CYBER/DARK (DARK THEME) =================== */
+:root,
+:root[data-theme='dark'] {
+  --color-bg-primary: #0a0f1c; /* Canvas Baseline */
+  --color-bg-secondary: #111827; /* Surface Base */
+  --color-bg-tertiary: #1a2236;
+  --color-bg-elevated: #1e2a3f;
+  --color-bg-hover: #232f47;
+  --color-bg-input: #141c2e;
+
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-surface-active: rgba(255, 255, 255, 0.08);
+
+  --color-text-primary: #f0ece4;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  
+  --color-text-dim: #94a3b8;
+  --color-text-disabled: #475569;
+
+  --color-accent: #c9a84c; /* Gold Old Accent */
+  --color-accent-hover: #d4b65e;
+  --color-accent-subtle: rgba(201, 168, 76, 0.12);
+  --color-accent-text: #0a0f1c;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+
+  --color-success: #34d399;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+
+  /* Sombras Físicas Multicanal (Oscuras) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 40px rgba(201, 168, 76, 0.1);
+  
+  --lx-shadow-glass: 
+    0 8px 32px -4px rgba(0, 0, 0, 0.6), 
+    0 24px 64px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  
+  --lx-shadow-button: 
+    0 2px 4px rgba(0, 0, 0, 0.6), 
+    0 4px 12px rgba(0, 0, 0, 0.8);
+    
+  --lx-radial-glow-1: rgba(201, 168, 76, 0.06);
+  --lx-radial-glow-2: rgba(201, 168, 76, 0.02);
+}
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;

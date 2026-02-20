@@ -14,6 +14,20 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Theme Management
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('lexia-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('lexia-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
   const {
     conversations,
     isLoaded,
@@ -110,6 +124,8 @@ function App() {
         onNewConversation={handleNewConversation}
         onToggleSidebar={handleToggleSidebar}
         sidebarOpen={sidebarOpen}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <Sidebar
