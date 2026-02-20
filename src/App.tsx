@@ -9,12 +9,9 @@ import { SkeletonLanding, SkeletonChat } from './components/ui/Skeleton';
 import './components/ui/ErrorBoundary.css';
 import './components/ui/Skeleton.css';
 import './App.css';
-import './styles/v1-overrides.css';
 
-const LandingPageV2 = lazy(() => import('./components/LandingPage'));
-const ChatInterfaceV2 = lazy(() => import('./components/ChatInterface'));
-const LandingPageV1 = lazy(() => import('./components/v1/LandingPageV1'));
-const ChatInterfaceV1 = lazy(() => import('./components/v1/ChatInterfaceV1'));
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const ChatInterface = lazy(() => import('./components/ChatInterface'));
 
 function App() {
   const navigate = useNavigate();
@@ -26,27 +23,12 @@ function App() {
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
-  const [designVersion, setDesignVersion] = useState<'v1' | 'v2'>(() => {
-    const saved = localStorage.getItem('lexia-design');
-    return saved === 'v1' ? 'v1' : 'v2';
-  });
-
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('lexia-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    if (designVersion === 'v1') {
-      document.documentElement.setAttribute('data-design', 'v1');
-    } else {
-      document.documentElement.removeAttribute('data-design');
-    }
-    localStorage.setItem('lexia-design', designVersion);
-  }, [designVersion]);
-
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  const toggleDesign = () => setDesignVersion(prev => prev === 'v1' ? 'v2' : 'v1');
 
   const {
     conversations,
@@ -93,7 +75,6 @@ function App() {
     }
   }), []);
 
-  // Parse route: determine if we're on landing or a chat
   const chatIdFromRoute = useMemo(() => {
     const match = location.pathname.match(/^\/c\/(.+)$/);
     return match ? match[1] : null;
@@ -101,7 +82,6 @@ function App() {
 
   const isLanding = !chatIdFromRoute;
 
-  // Sync activeConversationId with route
   useEffect(() => {
     if (chatIdFromRoute) {
       setActiveConversationId(chatIdFromRoute);
@@ -151,9 +131,6 @@ function App() {
     return <div className="app" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} />;
   }
 
-  const LandingPage = designVersion === 'v1' ? LandingPageV1 : LandingPageV2;
-  const ChatInterface = designVersion === 'v1' ? ChatInterfaceV1 : ChatInterfaceV2;
-
   return (
     <ErrorBoundary>
       <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -168,8 +145,6 @@ function App() {
           sidebarOpen={sidebarOpen}
           theme={theme}
           onToggleTheme={toggleTheme}
-          designVersion={designVersion}
-          onToggleDesign={toggleDesign}
         />
 
         <Sidebar
@@ -191,7 +166,7 @@ function App() {
             {isLanding ? (
               <Suspense key="landing" fallback={<SkeletonLanding />}>
                 <LandingPage
-                  key={`landing-${designVersion}`}
+                  key="landing"
                   onSendMessage={handleSendMessage}
                 />
               </Suspense>
@@ -199,7 +174,7 @@ function App() {
               <Suspense key="chat" fallback={<SkeletonChat />}>
                 {activeConversation ? (
                   <ChatInterface
-                    key={`chat-${designVersion}-${chatIdFromRoute}`}
+                    key={`chat-${chatIdFromRoute}`}
                     conversation={activeConversation}
                     isStreaming={isStreaming}
                     error={error}

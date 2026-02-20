@@ -10,8 +10,6 @@ interface TopBarProps {
   sidebarOpen: boolean;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
-  designVersion: 'v1' | 'v2';
-  onToggleDesign: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -21,8 +19,6 @@ const TopBar: React.FC<TopBarProps> = ({
   sidebarOpen,
   theme,
   onToggleTheme,
-  designVersion,
-  onToggleDesign,
 }) => {
   return (
     <header className="topbar" role="banner">
@@ -42,21 +38,6 @@ const TopBar: React.FC<TopBarProps> = ({
       </a>
 
       <div className="topbar-actions">
-        {/* Design version toggle */}
-        <button
-          className={`topbar-design-toggle ${designVersion === 'v2' ? 'is-v2' : 'is-v1'}`}
-          onClick={onToggleDesign}
-          aria-label={designVersion === 'v1' ? 'Cambiar a diseño V2' : 'Cambiar a diseño V1'}
-          title={designVersion === 'v1' ? 'Diseño V1 — Clic para V2' : 'Diseño V2 — Clic para V1'}
-        >
-          <span className="design-toggle-track">
-            <span className="design-toggle-thumb" />
-          </span>
-          <span className="design-toggle-label">
-            {designVersion === 'v1' ? 'V1' : 'V2'}
-          </span>
-        </button>
-
         <button
           className="topbar-btn"
           onClick={onNewConversation}

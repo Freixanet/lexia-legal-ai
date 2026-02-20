@@ -47,6 +47,13 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="error-boundary-message">
               Ha ocurrido un error inesperado. Puedes intentar recargar la aplicación.
             </p>
+            {this.state.error && (
+              <pre style={{ fontSize: '12px', textAlign: 'left', background: '#f5f5f5', padding: '12px', borderRadius: '8px', maxWidth: '600px', overflow: 'auto', color: '#c00', margin: '12px auto' }}>
+                {this.state.error.message}
+                {'\n\n'}
+                {this.state.error.stack}
+              </pre>
+            )}
             <div className="error-boundary-actions">
               <button className="error-boundary-btn" onClick={this.handleReset}>
                 Reintentar
