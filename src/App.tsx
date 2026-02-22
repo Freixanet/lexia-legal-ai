@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { del } from 'idb-keyval';
 import { useChat } from './hooks/useChat';
@@ -112,16 +112,23 @@ function App() {
   const isLanding = !chatIdFromRoute && !isLegalPage && !isLoginPage;
   const loggedIn = isLoggedIn();
 
-  /** Flujo: acceso → login; tras login → pantalla principal; al iniciar consulta → chat. */
+  /** Un solo color de fondo en toda la página de login: html y body usan el mismo que .app */
+  useLayoutEffect(() => {
+    const el = document.documentElement;
+    if (isLoginPage) {
+      el.setAttribute('data-lexia-page', 'login');
+    } else {
+      el.removeAttribute('data-lexia-page');
+    }
+    return () => el.removeAttribute('data-lexia-page');
+  }, [isLoginPage]);
+
+  /** Flujo: acceso → login; tras login → pantalla principal; al iniciar consulta → chat. No redirigir si ya está logueado y va explícitamente a login (ej. botón "Iniciar sesión" en la barra). */
   useEffect(() => {
     if (isLegalPage) return;
     if (!loggedIn && isLoginPage) return;
     if (!loggedIn) {
       navigate('/iniciar-sesion', { replace: true });
-      return;
-    }
-    if (loggedIn && isLoginPage) {
-      navigate('/', { replace: true });
     }
   }, [loggedIn, isLoginPage, isLegalPage, navigate]);
 
@@ -189,7 +196,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}${isLoginPage ? ' app--login' : ''}`}>
         <LegalDisclaimerModal
           forceOpen={forceDisclaimerOpen}
           onForceClose={() => setForceDisclaimerOpen(false)}
@@ -266,7 +273,7 @@ function App() {
           onClose={() => setSidebarOpen(false)}
         />
 
-        <main id="main-content" className="app-main">
+        <main id="main-content" className={`app-main${isLoginPage ? ' app-main--login' : ''}`}>
           {chatIdFromRoute && (
             <ChatLeftBar
               onToggleSidebar={handleToggleSidebar}

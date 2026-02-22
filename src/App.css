@@ -27,6 +27,17 @@
   min-height: 100dvh;
 }
 
+/* Pantalla de login: un solo color en toda la cadena (html y body usan el mismo fondo) */
+html[data-lexia-page="login"],
+html[data-lexia-page="login"] body {
+  background-color: var(--color-bg-primary);
+}
+
+.app.app--login,
+.app.app--login .app-main {
+  background-color: var(--color-bg-primary);
+}
+
 .app-main {
   flex: 1;
   position: relative;
@@ -35,6 +46,11 @@
   background-color: var(--color-bg-secondary);
   overflow: hidden;
   transition: margin-left var(--duration-deliberate) var(--ease-spring-smooth);
+}
+
+.app-main--login {
+  background-color: var(--color-bg-primary);
+  min-height: 100%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
