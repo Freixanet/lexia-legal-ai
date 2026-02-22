@@ -58,6 +58,42 @@
   display: flex !important;
 }
 
+/* --- Indicador de actividad IA (streaming) --- */
+.topbar-ai-activity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.topbar-ai-activity-icon {
+  animation: topbar-ai-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes topbar-ai-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.topbar-ai-activity-dots {
+  display: inline-block;
+  width: 1.2em;
+  overflow: hidden;
+  animation: topbar-ai-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes topbar-ai-dots {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar-ai-activity-icon { animation: none; }
+  .topbar-ai-activity-dots { animation: none; }
+}
+
 /* --- Móvil + chat: barra invisible, izquierda = historial + Lexia (solo texto) --- */
 .topbar-chat-left {
   display: none;

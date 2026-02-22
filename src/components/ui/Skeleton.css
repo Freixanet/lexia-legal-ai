@@ -106,3 +106,67 @@
     flex-direction: row;
   }
 }
+
+/* Legal skeleton */
+.skeleton-legal {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-10) var(--space-5);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.skeleton-legal-header {
+  margin-bottom: var(--space-8);
+}
+
+.skeleton-legal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.skeleton-legal-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Login skeleton */
+.skeleton-login {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: var(--color-bg-primary);
+}
+
+.skeleton-login-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.skeleton-login-title {
+  height: 2rem;
+  width: 10rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.skeleton-login-field {
+  height: 3rem;
+  width: 100%;
+  border-radius: var(--radius-input);
+}
+
+.skeleton-login-btn {
+  height: 3rem;
+  width: 8rem;
+  border-radius: var(--radius-button);
+  margin-top: var(--space-2);
+}

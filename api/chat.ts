@@ -2,6 +2,30 @@ export const config = { runtime: 'edge' };
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kv } from '@vercel/kv';
+import { z } from 'zod';
+
+const MAX_MESSAGE_LENGTH = 10000;
+const MAX_MESSAGES = 100;
+const MAX_SYSTEM_PROMPT_LENGTH = 20000;
+
+const attachmentSchema = z.object({
+  type: z.string().max(100),
+  data: z.string().max(5_000_000),
+});
+
+const chatMessageSchema = z.object({
+  role: z.enum(['user', 'model', 'assistant']),
+  content: z.string().min(1).max(MAX_MESSAGE_LENGTH),
+  attachments: z.array(attachmentSchema).optional(),
+});
+
+const chatBodySchema = z.object({
+  messages: z.array(chatMessageSchema).min(1).max(MAX_MESSAGES),
+  systemPrompt: z.string().max(MAX_SYSTEM_PROMPT_LENGTH).optional(),
+  jurisdiction: z.string().max(20).optional(),
+  sourcesEnabled: z.boolean().optional(),
+  task: z.enum(['title', 'chat']).optional(),
+});
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -85,7 +109,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { messages, systemPrompt, jurisdiction, sourcesEnabled, task } = req.body;
+    const parsed = chatBodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      const flat = parsed.error.flatten();
+      const firstForm = flat.formErrors?.[0];
+      const firstField = Object.values(flat.fieldErrors ?? {}).flat()[0];
+      const msg = firstForm ?? firstField ?? 'Invalid request body';
+      return res.status(400).json({ error: typeof msg === 'string' ? msg : 'Invalid request body' });
+    }
+    const { messages, systemPrompt, jurisdiction, sourcesEnabled, task } = parsed.data;
 
     // --- TASK: TITLE GENERATION ---
     if (task === 'title') {
@@ -128,10 +160,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ title });
     }
 
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Messages array is required' });
-    }
-
     // Map jurisdiction codes to full names
     const jurisdictionMap: Record<string, string> = {
       es: 'España (Nacional)',
@@ -154,33 +182,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const finalSystemPrompt = (systemPrompt || '') + configPrompt;
 
-    // Limit message length to prevent abuse
-    const MAX_MESSAGE_LENGTH = 10000;
-    for (const msg of messages) {
-      if (typeof msg.content !== 'string' || msg.content.length > MAX_MESSAGE_LENGTH) {
-        return res.status(400).json({ error: 'Message content invalid or too long' });
+    // Convert to Gemini format (roles already validated by Zod)
+    const contents = messages.map((m) => {
+      const parts: { text: string; inlineData?: { mimeType: string; data: string } }[] = [{ text: m.content }];
+      if (m.attachments?.length) {
+        for (const att of m.attachments) {
+          const base64Data = att.data.includes(',') ? att.data.split(',')[1] : att.data;
+          parts.push({ inlineData: { mimeType: att.type, data: base64Data } });
+        }
       }
-    }
-
-    // Convert to Gemini format
-    const contents = messages.map((m: any) => {
-      const parts: any[] = [{ text: m.content }];
-      
-      if (m.attachments && Array.isArray(m.attachments)) {
-        m.attachments.forEach((att: any) => {
-          if (att.data && att.type) {
-             // Basic format check
-             const base64Data = att.data.includes(',') ? att.data.split(',')[1] : att.data;
-             parts.push({
-               inlineData: {
-                 mimeType: att.type,
-                 data: base64Data
-               }
-             });
-          }
-        });
-      }
-
       return {
         role: m.role === 'user' ? 'user' : 'model',
         parts,
@@ -216,11 +226,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!geminiResponse.ok) {
+      const isProd = process.env.NODE_ENV === 'production';
       const errorData = await geminiResponse.json().catch(() => ({}));
-      const errorMessage =
-        (errorData as Record<string, Record<string, string>>)?.error?.message ||
-        `Gemini API error: ${geminiResponse.status}`;
-      return res.status(geminiResponse.status).json({ error: errorMessage });
+      const errorMessage = isProd
+        ? 'Error al conectar con el servicio. Inténtalo más tarde.'
+        : ((errorData as Record<string, Record<string, string>>)?.error?.message ||
+           `Gemini API error: ${geminiResponse.status}`);
+      return res.status(geminiResponse.status >= 500 ? 502 : geminiResponse.status).json({ error: errorMessage });
     }
 
     // Stream the SSE response back to the client
@@ -243,14 +255,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.write(chunk);
       }
     } catch (streamErr) {
-      // Client disconnected or stream error
-      console.error('Stream error:', streamErr);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Stream error:', streamErr);
+      }
     } finally {
       reader.releaseLock();
       res.end();
     }
   } catch (err) {
-    console.error('Proxy error:', err);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Proxy error:', err);
+    }
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

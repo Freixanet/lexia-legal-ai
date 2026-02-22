@@ -3,11 +3,12 @@ import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, useCallba
 import { useNavigate, useLocation } from 'react-router-dom';
 import { del } from 'idb-keyval';
 import { useChat } from './hooks/useChat';
-import { STORAGE_KEY_CONVERSATIONS } from './constants/storage';
+import { STORAGE_KEY_CONVERSATIONS, STORAGE_KEY_DRAFT_PREFIX } from './constants/storage';
 import { COOKIE_CONSENT_KEY } from './constants/cookies';
 import { DISCLAIMER_ACCEPTED_KEY } from './constants/disclaimer';
 import { isLoggedIn, clearLoggedIn } from './constants/auth';
 import { getStoredAppVersion, setStoredAppVersion, type AppVersion } from './constants/appVersion';
+import { useTheme } from './app/providers';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import ChatLeftBar from './components/ChatLeftBar';
@@ -16,13 +17,20 @@ import CookieBanner from './components/CookieBanner';
 import LegalDisclaimerModal from './components/LegalDisclaimerModal';
 import Icon from './components/ui/Icon';
 import Toast from './components/ui/Toast';
-import { SkeletonLanding, SkeletonChat } from './components/ui/Skeleton';
+import { SkeletonLanding, SkeletonChat, SkeletonLegal, SkeletonLogin } from './components/ui/Skeleton';
+import { LoadingLegal, LoadingLogin } from './app/loading';
+import { PageTransition } from './components/shared/PageTransition';
+import { EmojiRain } from './components/shared/EmojiRain';
+const CommandPalette = lazy(() => import('./components/shared/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const KeyboardShortcutsCheatsheet = lazy(() => import('./components/shared/KeyboardShortcutsCheatsheet').then(m => ({ default: m.KeyboardShortcutsCheatsheet })));
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './components/ui/ErrorBoundary.css';
 import './components/ui/Skeleton.css';
 import './App.css';
 import './styles/alt-version.css';
 
 const LandingPage = lazy(() => import('./components/LandingPage'));
+const LandingV3 = lazy(() => import('./components/landing/LandingV3').then(m => ({ default: m.LandingV3 })));
 const ChatInterface = lazy(() => import('./components/ChatInterface'));
 const LegalPage = lazy(() => import('./components/LegalPage'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
@@ -31,18 +39,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('lexia-theme');
-    if (saved === 'light' || saved === 'dark') return saved;
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('lexia-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const { theme, toggleTheme } = useTheme();
 
   const [appVersion, setAppVersion] = useState<AppVersion>(getStoredAppVersion);
 
@@ -72,7 +69,28 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [appToast, setAppToast] = useState<{ message: string } | null>(null);
   const [forceDisclaimerOpen, setForceDisclaimerOpen] = useState(false);
+  const [konamiRain, setKonamiRain] = useState(false);
+  const [chatFocusMode, setChatFocusMode] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
   const draftsRef = useRef<Record<string, string>>({});
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const commandPaletteOpenRef = useRef(false);
+  const cheatsheetOpenRef = useRef(false);
+  commandPaletteOpenRef.current = commandPaletteOpen;
+  cheatsheetOpenRef.current = cheatsheetOpen;
+
+  useEffect(() => {
+    const onOnline = () => setIsOffline(false);
+    const onOffline = () => setIsOffline(true);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
 
   useEffect(() => {
     let touchStartX = 0;
@@ -94,9 +112,23 @@ function App() {
   }, [sidebarOpen]);
 
   const draftConfig = useMemo(() => ({
-    getDraft: (id: string) => draftsRef.current[id] ?? '',
+    getDraft: (id: string) => {
+      const mem = draftsRef.current[id];
+      if (mem !== undefined) return mem;
+      try {
+        return localStorage.getItem(STORAGE_KEY_DRAFT_PREFIX + id) ?? '';
+      } catch {
+        return '';
+      }
+    },
     saveDraft: (id: string, text: string) => {
       draftsRef.current[id] = text;
+      try {
+        if (text) localStorage.setItem(STORAGE_KEY_DRAFT_PREFIX + id, text);
+        else localStorage.removeItem(STORAGE_KEY_DRAFT_PREFIX + id);
+      } catch {
+        /* ignore */
+      }
     }
   }), []);
 
@@ -159,6 +191,21 @@ function App() {
     setSidebarOpen((prev) => !prev);
   }, []);
 
+  useKeyboardShortcuts({
+    onNewChat: handleNewConversation,
+    onOpenCommandPalette: () => setCommandPaletteOpen(true),
+    onFocusChatInput: () => chatInputRef.current?.focus(),
+    onCloseModalOrStop: () => {
+      if (commandPaletteOpenRef.current) setCommandPaletteOpen(false);
+      else if (cheatsheetOpenRef.current) setCheatsheetOpen(false);
+      else stopStreaming();
+    },
+    onToggleSidebar: handleToggleSidebar,
+    onToggleTheme: toggleTheme,
+    onOpenCheatsheet: () => setCheatsheetOpen(true),
+    disableGlobal: false,
+  });
+
   const handleSelectConversation = useCallback((id: string) => {
     navigate(`/c/${id}`);
   }, [navigate]);
@@ -191,12 +238,27 @@ function App() {
   }, [clearAllConversations, navigate]);
 
   if (!isLoaded) {
-    return <div className="app" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} />;
+    return (
+      <div className="app app-loading" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} role="status" aria-live="polite">
+        <div className="app-loading-content">
+          <div className="app-loading-spinner" aria-hidden="true" />
+          <p className="app-loading-text">Cargando Lexia…</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <ErrorBoundary>
-      <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}${isLoginPage ? ' app--login' : ''}`}>
+      <div
+        className={`app ${sidebarOpen ? 'sidebar-open' : ''}${isLoginPage ? ' app--login' : ''}`}
+        data-focus-mode={chatFocusMode ? '' : undefined}
+      >
+        {isOffline && (
+          <div className="offline-banner" role="status" aria-live="polite">
+            Sin conexión. Tus mensajes se enviarán cuando vuelvas.
+          </div>
+        )}
         <LegalDisclaimerModal
           forceOpen={forceDisclaimerOpen}
           onForceClose={() => setForceDisclaimerOpen(false)}
@@ -220,6 +282,15 @@ function App() {
               title="Versión 2"
             >
               2
+            </button>
+            <button
+              type="button"
+              className={`app-version-btn ${appVersion === 'v3' ? 'active' : ''}`}
+              onClick={setVersion('v3')}
+              aria-label="Versión 3"
+              title="Versión 3 — Nueva experiencia"
+            >
+              3
             </button>
             <button
               type="button"
@@ -255,6 +326,7 @@ function App() {
             onToggleTheme={toggleTheme}
             isLanding={isLanding}
             isChatView={!!chatIdFromRoute}
+            isStreaming={isStreaming}
           />
         )}
 
@@ -297,38 +369,50 @@ function App() {
             </button>
           )}
           <AnimatePresence mode="wait">
-            {isLegalPage ? (
-              <Suspense key="legal" fallback={<SkeletonLanding />}>
-                <LegalPage key={path} />
-              </Suspense>
-            ) : isLoginPage ? (
-              <Suspense key="login" fallback={<SkeletonLanding />}>
-                <LoginPage key={path} />
-              </Suspense>
-            ) : isLanding ? (
-              <Suspense key="landing" fallback={<SkeletonLanding />}>
-                <LandingPage
-                  key="landing"
-                  onSendMessage={handleSendMessage}
-                />
-              </Suspense>
-            ) : (
-              <Suspense key="chat" fallback={<SkeletonChat />}>
-                {activeConversation ? (
-                  <ChatInterface
-                    key={`chat-${chatIdFromRoute}`}
-                    conversation={activeConversation}
-                    isStreaming={isStreaming}
-                    error={error}
-                    onSendMessage={handleSendMessage}
-                    onStopStreaming={stopStreaming}
-                    draftConfig={draftConfig}
-                  />
-                ) : (
-                  <SkeletonChat key="chat-loading" />
-                )}
-              </Suspense>
-            )}
+            <PageTransition
+              key={isLegalPage ? 'legal' : isLoginPage ? 'login' : isLanding ? 'landing' : `chat-${chatIdFromRoute ?? 'none'}`}
+            >
+              {isLegalPage ? (
+                <Suspense fallback={<LoadingLegal />}>
+                  <LegalPage key={path} />
+                </Suspense>
+              ) : isLoginPage ? (
+                <Suspense fallback={<LoadingLogin />}>
+                  <LoginPage key={path} />
+                </Suspense>
+              ) : isLanding ? (
+                <Suspense fallback={<SkeletonLanding />}>
+                  {appVersion === 'v3' ? (
+                    <LandingV3 key="landing-v3" />
+                  ) : (
+                    <LandingPage
+                      key="landing"
+                      onSendMessage={handleSendMessage}
+                    />
+                  )}
+                </Suspense>
+              ) : (
+                <Suspense fallback={<SkeletonChat />}>
+                  {activeConversation ? (
+                    <ChatInterface
+                      key={`chat-${chatIdFromRoute}`}
+                      conversation={activeConversation}
+                      isStreaming={isStreaming}
+                      error={error}
+                      onSendMessage={handleSendMessage}
+                      onStopStreaming={stopStreaming}
+                      draftConfig={draftConfig}
+                      onKonamiTrigger={() => setKonamiRain(true)}
+                      onFocusModeChange={setChatFocusMode}
+                      chatInputRef={chatInputRef}
+                      onShowToast={(msg) => setAppToast({ message: msg })}
+                    />
+                  ) : (
+                    <SkeletonChat key="chat-loading" />
+                  )}
+                </Suspense>
+              )}
+            </PageTransition>
           </AnimatePresence>
         </main>
         <CookieBanner />
@@ -337,6 +421,35 @@ function App() {
             message={appToast.message}
             onClose={() => setAppToast(null)}
           />
+        )}
+        <EmojiRain show={konamiRain} onComplete={() => setKonamiRain(false)} />
+        {commandPaletteOpen && (
+          <Suspense fallback={null}>
+            <CommandPalette
+              open={commandPaletteOpen}
+              onClose={() => setCommandPaletteOpen(false)}
+              items={conversations.map((c) => ({
+                type: 'conversation' as const,
+                id: c.id,
+                title: c.title,
+                description: c.messages.length > 0 ? c.messages[c.messages.length - 1].content.slice(0, 60) + (c.messages[c.messages.length - 1].content.length > 60 ? '…' : '') : undefined,
+              }))}
+              onSelectConversation={handleSelectConversation}
+              onNewChat={handleNewConversation}
+              onUploadDocument={() => {
+                handleNewConversation();
+                setAppToast({ message: 'Usa el botón de adjuntar en el chat para subir un documento.' });
+              }}
+              onToggleTheme={toggleTheme}
+              onToggleSidebar={handleToggleSidebar}
+              theme={theme}
+            />
+          </Suspense>
+        )}
+        {cheatsheetOpen && (
+          <Suspense fallback={null}>
+            <KeyboardShortcutsCheatsheet open={cheatsheetOpen} onClose={() => setCheatsheetOpen(false)} />
+          </Suspense>
         )}
       </div>
     </ErrorBoundary>

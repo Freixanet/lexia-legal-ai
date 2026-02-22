@@ -1,0 +1,30 @@
+/* ============================================
+   LEXIA — Versión 3 (data-app-version="v3")
+   Misma paleta púrpura que alt; experiencia nueva (landing, onboarding, dashboard).
+   ============================================ */
+[data-app-version="v3"] {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #7C6CF7;
+  --color-accent-subtle: rgba(108, 92, 231, 0.15);
+  --color-brand: #6C5CE7;
+  --color-brand-hover: #7C6CF7;
+  --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.2);
+}
+
+[data-app-version="v3"],
+[data-app-version="v3"][data-theme="dark"] {
+  --color-bg-primary: #0A0A0B;
+  --color-bg-secondary: #141416;
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #7C6CF7;
+}
+
+[data-app-version="v3"][data-theme="light"] {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F9FAFB;
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #5B4CDB;
+}

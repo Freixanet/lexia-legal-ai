@@ -18,7 +18,13 @@ interface ChatInterfaceProps {
   draftConfig: {
     getDraft: (id: string) => string;
     saveDraft: (id: string, text: string) => void;
-  }
+  };
+  onKonamiTrigger?: () => void;
+  onFocusModeChange?: (active: boolean) => void;
+  /** Ref for the message input (e.g. for Cmd+/ focus). */
+  chatInputRef?: React.RefObject<HTMLTextAreaElement | null>;
+  /** Mostrar toast (ej. "Copiado ✓" al copiar respuesta). */
+  onShowToast?: (message: string) => void;
 }
 
 const StreamingBubble: React.FC = () => {
@@ -63,16 +69,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onSendMessage,
   onStopStreaming,
   draftConfig,
+  onKonamiTrigger,
+  onFocusModeChange,
+  chatInputRef,
+  onShowToast,
 }) => {
   const [input, setInput] = useState(() => draftConfig.getDraft(conversation.id));
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [showScrollFab, setShowScrollFab] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [summaryCollapsed, setSummaryCollapsed] = useState(false);
+  const [summaryDismissed, setSummaryDismissed] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const konamiTriggeredRef = useRef(false);
+  const pendingOfflineMessageRef = useRef<{ content: string; attachment?: Attachment } | null>(null);
+
+  const FOCUS_MODE_THRESHOLD = 80;
+  useEffect(() => {
+    onFocusModeChange?.(inputFocused && input.length > FOCUS_MODE_THRESHOLD);
+  }, [inputFocused, input.length, onFocusModeChange]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -86,6 +107,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!isOffline && pendingOfflineMessageRef.current) {
+      const pending = pendingOfflineMessageRef.current;
+      pendingOfflineMessageRef.current = null;
+      onSendMessage(pending.content, { attachment: pending.attachment });
+      onShowToast?.('Mensaje enviado.');
+    }
+  }, [isOffline, onSendMessage, onShowToast]);
+
+  useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + 'px';
@@ -95,6 +125,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     const draft = draftConfig.getDraft(conversation.id);
     setInput(draft);
+    setShowDraftBanner(draft.trim().length > 0);
+    setSummaryDismissed(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.id]);
 
@@ -102,7 +134,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const value = e.target.value;
     setInput(value);
     draftConfig.saveDraft(conversation.id, value);
-  }, [conversation.id, draftConfig]);
+    if (onKonamiTrigger && value.toLowerCase().includes('konami') && !konamiTriggeredRef.current) {
+      konamiTriggeredRef.current = true;
+      onKonamiTrigger();
+    }
+    if (!value.toLowerCase().includes('konami')) konamiTriggeredRef.current = false;
+  }, [conversation.id, draftConfig, onKonamiTrigger]);
 
   const handleScroll = useCallback(() => {
     if (!messagesRef.current) return;
@@ -186,6 +223,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     e.preventDefault();
     const trimmed = input.trim();
     if ((!trimmed && !pendingAttachment) || isStreaming) return;
+    onFocusModeChange?.(false);
+    if (isOffline) {
+      pendingOfflineMessageRef.current = { content: trimmed, attachment: pendingAttachment || undefined };
+      onShowToast?.('Sin conexión. Tu mensaje se enviará cuando vuelvas.');
+      setInput('');
+      draftConfig.saveDraft(conversation.id, '');
+      setPendingAttachment(null);
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      return;
+    }
     onSendMessage(trimmed, { attachment: pendingAttachment || undefined });
     setInput('');
     draftConfig.saveDraft(conversation.id, '');
@@ -221,6 +268,62 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         aria-relevant="additions"
       >
         <div className="chat-messages-container">
+          {showDraftBanner && draftConfig.getDraft(conversation.id).trim().length > 0 && (
+            <motion.div
+              className="chat-draft-banner"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="status"
+              aria-live="polite"
+            >
+              <span>Tienes un borrador</span>
+              <button
+                type="button"
+                className="chat-draft-banner-dismiss"
+                onClick={() => setShowDraftBanner(false)}
+                aria-label="Cerrar aviso de borrador"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </motion.div>
+          )}
+          {!summaryDismissed && conversation.messages.length >= 2 && (
+            <motion.div
+              className="chat-summary-card"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="region"
+              aria-label="Resumen de la conversación"
+            >
+              <button
+                type="button"
+                className="chat-summary-card-header"
+                onClick={() => setSummaryCollapsed((c) => !c)}
+                aria-expanded={!summaryCollapsed}
+              >
+                <span>Resumen de esta conversación</span>
+                <Icon name={summaryCollapsed ? 'chevron-right' : 'chevron-down'} size={16} />
+              </button>
+              {!summaryCollapsed && (
+                <div className="chat-summary-card-body">
+                  <p>{conversation.title}</p>
+                  <p className="chat-summary-card-preview">
+                    {conversation.messages[0]?.role === 'user'
+                      ? conversation.messages[0].content.slice(0, 120) + (conversation.messages[0].content.length > 120 ? '…' : '')
+                      : ''}
+                  </p>
+                </div>
+              )}
+              <button
+                type="button"
+                className="chat-summary-card-dismiss"
+                onClick={() => setSummaryDismissed(true)}
+                aria-label="Ocultar resumen"
+              >
+                Ocultar
+              </button>
+            </motion.div>
+          )}
           {isEmpty && (
             <motion.div
               className="chat-empty-state"
@@ -245,7 +348,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: idx > conversation.messages.length - 3 ? 0.05 : 0 }}
               >
-                <MessageBubble message={msg} />
+                <MessageBubble message={msg} onCopyConfirm={onShowToast} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -332,10 +435,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
             <textarea
               id="chat-message-input"
-              ref={textareaRef}
+              ref={(el) => {
+                (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+                if (chatInputRef) (chatInputRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+              }}
               className="chat-input"
               value={input}
               onChange={handleInputChange}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
               onKeyDown={handleKeyDown}
               placeholder="Describe tu duda legal..."
               rows={1}

@@ -121,6 +121,95 @@
   line-height: var(--leading-relaxed);
 }
 
+/* --- Draft banner --- */
+.chat-draft-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle, rgba(167, 139, 250, 0.12));
+  border: 1px solid var(--color-accent, rgba(167, 139, 250, 0.3));
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.chat-draft-banner-dismiss {
+  padding: var(--space-1);
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.chat-draft-banner-dismiss:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+/* --- Summary card --- */
+.chat-summary-card {
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  overflow: hidden;
+}
+
+.chat-summary-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.chat-summary-card-header:hover {
+  background: var(--color-surface-hover);
+}
+
+.chat-summary-card-body {
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.chat-summary-card-body p {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.chat-summary-card-preview {
+  color: var(--color-text-tertiary) !important;
+}
+
+.chat-summary-card-dismiss {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-top: 1px solid var(--color-border);
+  background: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.chat-summary-card-dismiss:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
 /* --- Loading --- */
 .chat-loading {
   display: flex;

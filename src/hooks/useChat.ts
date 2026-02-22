@@ -21,55 +21,68 @@ export function useChat() {
     conversationsRef.current = conversations;
   }, [conversations]);
 
-  // Initial load and migration
+  // Initial load and migration (con timeout de seguridad para evitar pantalla en blanco)
   useEffect(() => {
+    let cancelled = false;
+    const SAFETY_TIMEOUT_MS = 3000;
+
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) setIsLoaded(true);
+    }, SAFETY_TIMEOUT_MS);
+
     async function loadData() {
       try {
-        // Try idb first
         const idbData = await get<Conversation[]>(STORAGE_KEY_CONVERSATIONS);
-        
+
+        if (cancelled) return;
         if (idbData && idbData.length > 0) {
           setConversations(idbData);
-        } else {
-          // Migration from localStorage with Cross-Tab Synchronization (Web Locks API)
-          if (typeof navigator !== 'undefined' && navigator.locks) {
-            await navigator.locks.request('lexia_migration_lock', async () => {
-              // Re-check IDB inside lock to prevent double migration if another tab beat us to it
-              const doubleCheckIdb = await get<Conversation[]>(STORAGE_KEY_CONVERSATIONS);
-              if (doubleCheckIdb && doubleCheckIdb.length > 0) {
-                setConversations(doubleCheckIdb);
-                return;
-              }
-
-              const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
-              if (localDataRaw) {
-                const localData = JSON.parse(localDataRaw) as Conversation[];
-                setConversations(localData);
-                await set(STORAGE_KEY_CONVERSATIONS, localData);
-                localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
-                console.log("Migrated discussions from localStorage to IndexedDB atomically");
-              }
-            });
-          } else {
-            // Fallback for non-supporting browsers (eg old Safari)
+          clearTimeout(timeoutId);
+          setIsLoaded(true);
+          return;
+        }
+        if (typeof navigator !== 'undefined' && navigator.locks) {
+          await navigator.locks.request('lexia_migration_lock', async () => {
+            if (cancelled) return;
+            const doubleCheckIdb = await get<Conversation[]>(STORAGE_KEY_CONVERSATIONS);
+            if (doubleCheckIdb && doubleCheckIdb.length > 0) {
+              setConversations(doubleCheckIdb);
+              return;
+            }
             const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
             if (localDataRaw) {
               const localData = JSON.parse(localDataRaw) as Conversation[];
               setConversations(localData);
               await set(STORAGE_KEY_CONVERSATIONS, localData);
               localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
-              console.log("Migrated without lock (not supported)");
             }
+          });
+        } else {
+          const localDataRaw = localStorage.getItem(STORAGE_KEY_CONVERSATIONS);
+          if (localDataRaw) {
+            const localData = JSON.parse(localDataRaw) as Conversation[];
+            setConversations(localData);
+            await set(STORAGE_KEY_CONVERSATIONS, localData);
+            localStorage.removeItem(STORAGE_KEY_CONVERSATIONS);
           }
         }
       } catch (err) {
-        console.error("Failed to load conversations from IndexedDB", err);
-        isLoadFailed.current = true; // Activar testigo criptográfico de corrupción
+        if (!cancelled) {
+          console.error("Failed to load conversations from IndexedDB", err);
+          isLoadFailed.current = true;
+        }
       } finally {
-        setIsLoaded(true);
+        if (!cancelled) {
+          clearTimeout(timeoutId);
+          setIsLoaded(true);
+        }
       }
     }
     loadData();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Persist conversations

@@ -147,12 +147,7 @@
   --chat-max-width: 720px;
   --content-max-width: 1080px;
 
-  /* Breakpoints (for reference, used in media queries) */
-  /* --bp-sm: 480px */
-  /* --bp-md: 768px */
-  /* --bp-lg: 1024px */
-  /* --bp-xl: 1280px */
-  /* --bp-2xl: 1536px */
+  /* Breakpoints: 640 (sm), 768 (md), 1024 (lg), 1280 (xl). Use in media queries. */
 }
 
 /* ==============================================

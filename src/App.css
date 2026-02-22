@@ -27,6 +27,41 @@
   min-height: 100dvh;
 }
 
+/* Pantalla de carga inicial (evita pantalla en blanco) */
+.app.app-loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.app-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.app-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: app-loading-spin 0.8s linear infinite;
+}
+
+@keyframes app-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+.app-loading-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-spinner { animation: none; opacity: 0.8; }
+}
+
 /* Pantalla de login: un solo color en toda la cadena (html y body usan el mismo fondo) */
 html[data-lexia-page="login"],
 html[data-lexia-page="login"] body {
@@ -61,6 +96,30 @@ html[data-lexia-page="login"] body {
 
 .app.sidebar-open .app-main {
   margin-left: var(--sidebar-width);
+}
+
+/* Banner offline */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-sticky) + 1);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-warning, #eab308);
+  color: var(--color-bg-primary, #0f0f12);
+  font-size: var(--text-sm);
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Modo focus: atenuar sidebar y header para destacar el chat */
+.app[data-focus-mode] .topbar,
+.app[data-focus-mode] .sidebar,
+.app[data-focus-mode] .sidebar-overlay,
+.app[data-focus-mode] .chat-left-bar {
+  opacity: 0.65;
+  transition: opacity 0.3s ease-out;
 }
 
 /* Barra vertical izquierda en chat (desktop/tablet): reservar espacio para no solapar */

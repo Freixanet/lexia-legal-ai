@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Message } from '../services/api';
@@ -8,21 +9,26 @@ import { LexiaLogo } from './ui/Icon';
 import { parseSources, preprocessContent } from '../utils/citations';
 import { extractAlerts } from '../utils/legalSections';
 import { DISCLAIMER_LEGAL_TEXT, DISCLAIMER_LEGAL_LINK, DISCLAIMER_LEGAL_LINK_LABEL } from '../constants/legal';
+import { stripMarkdown } from '../utils/stripMarkdown';
 import './MessageBubble.css';
 
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
+  /** Llamado al copiar (ej. para mostrar toast "Copiado ✓"). */
+  onCopyConfirm?: (message: string) => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming, onCopyConfirm }) => {
   const isUser = message.role === 'user';
   const [copied, setCopied] = React.useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = async (asPlainText = true) => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      const text = asPlainText && !isUser ? stripMarkdown(message.content) : message.content;
+      await navigator.clipboard.writeText(text);
       setCopied(true);
+      onCopyConfirm?.('Copiado ✓');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard unavailable
@@ -71,9 +77,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
   };
 
   return (
-    <article
+    <motion.article
       className={`message-bubble ${isUser ? 'message-user' : 'message-assistant'}`}
       aria-label={`${isUser ? 'Tu mensaje' : 'Respuesta de Lexia'} a las ${formattedTime}`}
+      initial={
+        isUser
+          ? { opacity: 0, x: 20 }
+          : { opacity: 0 }
+      }
+      animate={
+        isUser
+          ? { opacity: 1, x: 0 }
+          : { opacity: 1 }
+      }
+      transition={{
+        duration: isUser ? 0.1 : 0.2,
+        ease: [0.22, 1, 0.36, 1],
+      }}
     >
       {!isUser && (
         <div className="message-avatar" aria-hidden="true">
@@ -132,7 +152,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
           )}
 
           {!isUser && !isStreaming && (
-            <div className="message-disclaimer" role="note" aria-label="Aviso legal">
+            <motion.div
+              className="message-disclaimer"
+              role="note"
+              aria-label="Aviso legal"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
               <span className="message-disclaimer-icon" aria-hidden="true">⚖️</span>
               <p className="message-disclaimer-text">{DISCLAIMER_LEGAL_TEXT}</p>
               <a
@@ -143,7 +170,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
               >
                 {DISCLAIMER_LEGAL_LINK_LABEL} →
               </a>
-            </div>
+            </motion.div>
           )}
 
           {!isUser && !isStreaming && verificationStatus !== 'none' && (
@@ -188,17 +215,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
           </time>
           {!isUser && !isStreaming && (
             <button
+              type="button"
               className="message-copy-btn"
-              onClick={handleCopy}
-              aria-label={copied ? 'Copiado' : 'Copiar respuesta'}
+              onClick={() => handleCopy(true)}
+              aria-label={copied ? 'Copiado' : 'Copiar respuesta como texto plano'}
               aria-live="polite"
+              title="Copiar como texto plano"
             >
               {copied ? <Icon name="check" size={14} /> : <Icon name="copy" size={14} />}
             </button>
           )}
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 };
 

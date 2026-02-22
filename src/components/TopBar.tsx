@@ -15,6 +15,8 @@ interface TopBarProps {
   isLanding: boolean;
   /** En true (página de chat) la barra no se muestra (sin fondo ni borde), solo el contenido. */
   isChatView?: boolean;
+  /** Muestra "Lexia está analizando..." con icono pulsante. */
+  isStreaming?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -26,6 +28,7 @@ const TopBar: React.FC<TopBarProps> = ({
   onToggleTheme,
   isLanding,
   isChatView = false,
+  isStreaming = false,
 }) => {
   return (
     <header
@@ -46,15 +49,25 @@ const TopBar: React.FC<TopBarProps> = ({
           >
             <Icon name="menu" size={16} />
           </button>
-          <button
-            type="button"
-            className="topbar-logo-text-only"
-            onClick={onGoHome}
-            aria-label="Volver al inicio"
-            title="Lexia"
-          >
-            Lexia
-          </button>
+          {isStreaming ? (
+            <div className="topbar-ai-activity" role="status" aria-live="polite">
+              <span className="topbar-ai-activity-icon" aria-hidden="true">
+                <LexiaLogo size={14} />
+              </span>
+              <span className="topbar-ai-activity-text">Lexia está analizando</span>
+              <span className="topbar-ai-activity-dots" aria-hidden="true">...</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="topbar-logo-text-only"
+              onClick={onGoHome}
+              aria-label="Volver al inicio"
+              title="Lexia"
+            >
+              Lexia
+            </button>
+          )}
         </div>
       )}
 
