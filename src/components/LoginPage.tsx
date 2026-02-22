@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { setLoggedIn } from '../constants/auth';
 import './LoginPage.css';
 
 const PHRASES = ['Lexia', 'Empower\nyourself.'];
@@ -98,25 +99,23 @@ const LoginPage: React.FC = () => {
     (phase === 'deleting' && displayedLength > 0) ||
     (phase === 'typing' && displayedLength === currentPhrase.length);
 
-  const handleApple = useCallback(() => {
-    // Placeholder: integrar Sign in with Apple
+  const handleLogin = useCallback(() => {
+    setLoggedIn();
     navigate('/');
   }, [navigate]);
+
+  const handleApple = useCallback(() => {
+    // Placeholder: integrar Sign in with Apple
+    handleLogin();
+  }, [handleLogin]);
 
   const handleGoogle = useCallback(() => {
     // Placeholder: integrar Sign in with Google
-    navigate('/');
-  }, [navigate]);
+    handleLogin();
+  }, [handleLogin]);
 
   return (
     <div className="login-welcome" role="main" aria-label="Iniciar sesión en Lexia">
-      <Link
-        to="/"
-        className="login-welcome-back"
-        aria-label="Volver al inicio"
-      >
-        Volver
-      </Link>
       <div className="login-welcome-center">
         <h1 className="login-welcome-title" aria-live="polite" aria-atomic="true">
           {displayedText}
@@ -162,7 +161,7 @@ const LoginPage: React.FC = () => {
         <button
           type="button"
           className="login-welcome-btn login-welcome-btn-secondary"
-          onClick={() => navigate('/')}
+          onClick={handleLogin}
           aria-label="Regístrate"
         >
           Regístrate
@@ -171,7 +170,7 @@ const LoginPage: React.FC = () => {
         <button
           type="button"
           className="login-welcome-btn login-welcome-btn-ghost"
-          onClick={() => navigate('/')}
+          onClick={handleLogin}
           aria-label="Inicia sesión"
         >
           Inicia sesión

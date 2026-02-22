@@ -6,6 +6,7 @@ import { useChat } from './hooks/useChat';
 import { STORAGE_KEY_CONVERSATIONS } from './constants/storage';
 import { COOKIE_CONSENT_KEY } from './constants/cookies';
 import { DISCLAIMER_ACCEPTED_KEY } from './constants/disclaimer';
+import { isLoggedIn, clearLoggedIn } from './constants/auth';
 import { getStoredAppVersion, setStoredAppVersion, type AppVersion } from './constants/appVersion';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
@@ -109,6 +110,20 @@ function App() {
   }, [location.pathname, isLegalPage]);
 
   const isLanding = !chatIdFromRoute && !isLegalPage && !isLoginPage;
+  const loggedIn = isLoggedIn();
+
+  /** Flujo: acceso → login; tras login → pantalla principal; al iniciar consulta → chat. */
+  useEffect(() => {
+    if (isLegalPage) return;
+    if (!loggedIn && isLoginPage) return;
+    if (!loggedIn) {
+      navigate('/iniciar-sesion', { replace: true });
+      return;
+    }
+    if (loggedIn && isLoginPage) {
+      navigate('/', { replace: true });
+    }
+  }, [loggedIn, isLoginPage, isLegalPage, navigate]);
 
   useEffect(() => {
     if (chatIdFromRoute) {
@@ -161,9 +176,10 @@ function App() {
     localStorage.removeItem('lexia-theme');
     localStorage.removeItem(COOKIE_CONSENT_KEY);
     localStorage.removeItem(DISCLAIMER_ACCEPTED_KEY);
+    clearLoggedIn();
     clearAllConversations();
     setSidebarOpen(false);
-    navigate('/');
+    navigate('/iniciar-sesion');
     setAppToast({ message: 'Todos tus datos han sido eliminados.' });
   }, [clearAllConversations, navigate]);
 
