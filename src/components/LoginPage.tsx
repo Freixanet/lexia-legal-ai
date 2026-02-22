@@ -129,11 +129,12 @@ const LoginPage: React.FC = () => {
       </div>
 
       <motion.div
-        className="login-welcome-actions"
+        className="login-welcome-actions-wrap"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 1.2 }}
       >
+        <div className="login-welcome-actions">
         <button
           type="button"
           className="login-welcome-btn login-welcome-btn-apple"
@@ -175,6 +176,7 @@ const LoginPage: React.FC = () => {
         >
           Inicia sesión
         </button>
+        </div>
       </motion.div>
     </div>
   );
