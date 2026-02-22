@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './ui/Icon';
 import { LexiaLogo } from './ui/Icon';
 import './TopBar.css';
@@ -78,15 +79,14 @@ const TopBar: React.FC<TopBarProps> = ({
       <div className="topbar-actions">
         {isLanding ? (
           <>
-            <button
-              type="button"
+            <Link
+              to="/iniciar-sesion"
               className="topbar-btn topbar-btn-landing-signin"
               aria-label="Iniciar sesión"
               title="Iniciar sesión"
-              onClick={() => {}}
             >
               <span className="topbar-btn-label">Iniciar sesión</span>
-            </button>
+            </Link>
             <button
               type="button"
               className="topbar-btn topbar-btn-primary topbar-btn-landing-primary"

@@ -24,6 +24,7 @@ import './styles/alt-version.css';
 const LandingPage = lazy(() => import('./components/LandingPage'));
 const ChatInterface = lazy(() => import('./components/ChatInterface'));
 const LegalPage = lazy(() => import('./components/LegalPage'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
 
 function App() {
   const navigate = useNavigate();
@@ -100,13 +101,14 @@ function App() {
 
   const path = useMemo(() => location.pathname.replace(/\/$/, '') || '/', [location.pathname]);
   const isLegalPage = path === '/aviso-legal' || path === '/privacidad' || path === '/cookies';
+  const isLoginPage = path === '/iniciar-sesion' || path === '/login';
   const chatIdFromRoute = useMemo(() => {
     if (isLegalPage) return null;
     const match = location.pathname.match(/^\/c\/(.+)$/);
     return match ? match[1] : null;
   }, [location.pathname, isLegalPage]);
 
-  const isLanding = !chatIdFromRoute && !isLegalPage;
+  const isLanding = !chatIdFromRoute && !isLegalPage && !isLoginPage;
 
   useEffect(() => {
     if (chatIdFromRoute) {
@@ -176,7 +178,7 @@ function App() {
           forceOpen={forceDisclaimerOpen}
           onForceClose={() => setForceDisclaimerOpen(false)}
         />
-        {!chatIdFromRoute && (
+        {!chatIdFromRoute && !isLoginPage && (
           <div className="app-corner-controls" role="group" aria-label="Accesos rápidos">
             <button
               type="button"
@@ -220,16 +222,18 @@ function App() {
           Saltar al contenido principal
         </a>
 
-        <TopBar
-          onGoHome={handleGoHome}
-          onNewConversation={handleNewConversation}
-          onToggleSidebar={handleToggleSidebar}
-          sidebarOpen={sidebarOpen}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          isLanding={isLanding}
-          isChatView={!!chatIdFromRoute}
-        />
+        {!isLoginPage && (
+          <TopBar
+            onGoHome={handleGoHome}
+            onNewConversation={handleNewConversation}
+            onToggleSidebar={handleToggleSidebar}
+            sidebarOpen={sidebarOpen}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            isLanding={isLanding}
+            isChatView={!!chatIdFromRoute}
+          />
+        )}
 
         <Sidebar
           conversations={conversations}
@@ -273,6 +277,10 @@ function App() {
             {isLegalPage ? (
               <Suspense key="legal" fallback={<SkeletonLanding />}>
                 <LegalPage key={path} />
+              </Suspense>
+            ) : isLoginPage ? (
+              <Suspense key="login" fallback={<SkeletonLanding />}>
+                <LoginPage key={path} />
               </Suspense>
             ) : isLanding ? (
               <Suspense key="landing" fallback={<SkeletonLanding />}>
