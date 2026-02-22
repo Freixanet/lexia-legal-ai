@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './LoginPage.css';
 
-const PHRASES = ['Lexia', 'Empower yourself.'];
+const PHRASES = ['Lexia', 'Empower\nyourself.'];
 const TYPEWRITER_DELAY_MS = 180;
 const DELETE_DELAY_MS = 70;
 const PAUSE_AFTER_TYPING_MS = 1400;
