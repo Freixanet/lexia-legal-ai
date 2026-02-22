@@ -16,6 +16,7 @@ interface SidebarProps {
   onRestoreConversation: (conversation: Conversation) => void;
   onRenameConversation: (id: string, newTitle: string) => void;
   onClearAll: () => void;
+  onDeleteAllData?: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -30,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onRestoreConversation,
   onRenameConversation,
   onClearAll,
+  onDeleteAllData,
   isOpen,
   onClose,
 }) => {
@@ -39,6 +41,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteHistoryModalOpen, setDeleteHistoryModalOpen] = useState(false);
+  const [deleteAllDataModalOpen, setDeleteAllDataModalOpen] = useState(false);
+  const [deleteAllDataConfirmText, setDeleteAllDataConfirmText] = useState('');
   const [targetConversation, setTargetConversation] = useState<Conversation | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -135,6 +139,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (deleteConfirmText === 'BORRAR') {
       onClearAll();
       setDeleteHistoryModalOpen(false);
+    }
+  };
+
+  const handleDeleteAllDataClick = () => {
+    setDeleteAllDataModalOpen(true);
+    setDeleteAllDataConfirmText('');
+  };
+
+  const handleDeleteAllDataConfirm = () => {
+    if (deleteAllDataConfirmText === 'ELIMINAR' && onDeleteAllData) {
+      onDeleteAllData();
+      setDeleteAllDataModalOpen(false);
     }
   };
 
@@ -294,6 +310,22 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <span className="settings-hint">Modelo: Gemini 2.5 Flash</span>
             </div>
+            {onDeleteAllData && (
+              <div className="settings-section settings-section-danger">
+                <button
+                  type="button"
+                  className="settings-delete-all-btn"
+                  onClick={handleDeleteAllDataClick}
+                  aria-describedby="delete-all-desc"
+                >
+                  <Icon name="trash" size={14} />
+                  Eliminar todos mis datos
+                </button>
+                <p id="delete-all-desc" className="settings-hint">
+                  Borra todas tus conversaciones y preferencias en este dispositivo (derecho de supresión RGPD).
+                </p>
+              </div>
+            )}
           </div>
         )}
       </aside>
@@ -318,6 +350,39 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="modal-input"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={deleteAllDataModalOpen}
+        onClose={() => setDeleteAllDataModalOpen(false)}
+        title="Eliminar todos mis datos"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDeleteAllDataModalOpen(false)}>Cancelar</button>
+            <button
+              className="btn-danger"
+              onClick={handleDeleteAllDataConfirm}
+              disabled={deleteAllDataConfirmText !== 'ELIMINAR'}
+            >
+              Eliminar todo
+            </button>
+          </>
+        }
+      >
+        <p className="modal-text-warning">
+          Se eliminarán <strong>todas</strong> tus conversaciones, borradores y preferencias guardadas en este dispositivo (tema, consentimiento de cookies). Esta acción no se puede deshacer. En la próxima visita se volverá a mostrar el aviso de cookies.
+        </p>
+        <div className="modal-field">
+          <label>Escribe &quot;ELIMINAR&quot; para confirmar</label>
+          <input
+            type="text"
+            value={deleteAllDataConfirmText}
+            onChange={(e) => setDeleteAllDataConfirmText(e.target.value)}
+            className="modal-input"
+            placeholder="ELIMINAR"
+            onKeyDown={(e) => e.key === 'Enter' && handleDeleteAllDataConfirm()}
           />
         </div>
       </Modal>

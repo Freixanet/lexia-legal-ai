@@ -1,17 +1,29 @@
 import { AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { del } from 'idb-keyval';
 import { useChat } from './hooks/useChat';
+import { STORAGE_KEY_CONVERSATIONS } from './constants/storage';
+import { COOKIE_CONSENT_KEY } from './constants/cookies';
+import { DISCLAIMER_ACCEPTED_KEY } from './constants/disclaimer';
+import { getStoredAppVersion, setStoredAppVersion, type AppVersion } from './constants/appVersion';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
+import ChatLeftBar from './components/ChatLeftBar';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import CookieBanner from './components/CookieBanner';
+import LegalDisclaimerModal from './components/LegalDisclaimerModal';
+import Icon from './components/ui/Icon';
+import Toast from './components/ui/Toast';
 import { SkeletonLanding, SkeletonChat } from './components/ui/Skeleton';
 import './components/ui/ErrorBoundary.css';
 import './components/ui/Skeleton.css';
 import './App.css';
+import './styles/alt-version.css';
 
 const LandingPage = lazy(() => import('./components/LandingPage'));
 const ChatInterface = lazy(() => import('./components/ChatInterface'));
+const LegalPage = lazy(() => import('./components/LegalPage'));
 
 function App() {
   const navigate = useNavigate();
@@ -30,6 +42,15 @@ function App() {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
+  const [appVersion, setAppVersion] = useState<AppVersion>(getStoredAppVersion);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-app-version', appVersion);
+    setStoredAppVersion(appVersion);
+  }, [appVersion]);
+
+  const setVersion = (v: AppVersion) => () => setAppVersion(v);
+
   const {
     conversations,
     isLoaded,
@@ -47,6 +68,8 @@ function App() {
   } = useChat();
 
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
+  const [appToast, setAppToast] = useState<{ message: string } | null>(null);
+  const [forceDisclaimerOpen, setForceDisclaimerOpen] = useState(false);
   const draftsRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
@@ -75,12 +98,15 @@ function App() {
     }
   }), []);
 
+  const path = useMemo(() => location.pathname.replace(/\/$/, '') || '/', [location.pathname]);
+  const isLegalPage = path === '/aviso-legal' || path === '/privacidad' || path === '/cookies';
   const chatIdFromRoute = useMemo(() => {
+    if (isLegalPage) return null;
     const match = location.pathname.match(/^\/c\/(.+)$/);
     return match ? match[1] : null;
-  }, [location.pathname]);
+  }, [location.pathname, isLegalPage]);
 
-  const isLanding = !chatIdFromRoute;
+  const isLanding = !chatIdFromRoute && !isLegalPage;
 
   useEffect(() => {
     if (chatIdFromRoute) {
@@ -127,6 +153,18 @@ function App() {
     }
   }, [sendMessage, navigate]);
 
+  /** Derecho de supresión RGPD: borra todas las conversaciones y preferencias en este dispositivo. */
+  const handleDeleteAllData = useCallback(async () => {
+    await del(STORAGE_KEY_CONVERSATIONS);
+    localStorage.removeItem('lexia-theme');
+    localStorage.removeItem(COOKIE_CONSENT_KEY);
+    localStorage.removeItem(DISCLAIMER_ACCEPTED_KEY);
+    clearAllConversations();
+    setSidebarOpen(false);
+    navigate('/');
+    setAppToast({ message: 'Todos tus datos han sido eliminados.' });
+  }, [clearAllConversations, navigate]);
+
   if (!isLoaded) {
     return <div className="app" style={{ minHeight: '100dvh', backgroundColor: 'var(--color-bg-primary)' }} />;
   }
@@ -134,6 +172,50 @@ function App() {
   return (
     <ErrorBoundary>
       <div className={`app ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <LegalDisclaimerModal
+          forceOpen={forceDisclaimerOpen}
+          onForceClose={() => setForceDisclaimerOpen(false)}
+        />
+        {!chatIdFromRoute && (
+          <div className="app-corner-controls" role="group" aria-label="Accesos rápidos">
+            <button
+              type="button"
+              className={`app-version-btn ${appVersion === 'default' ? 'active' : ''}`}
+              onClick={setVersion('default')}
+              aria-label="Versión 1"
+              title="Versión 1"
+            >
+              1
+            </button>
+            <button
+              type="button"
+              className={`app-version-btn ${appVersion === 'alt' ? 'active' : ''}`}
+              onClick={setVersion('alt')}
+              aria-label="Versión 2"
+              title="Versión 2"
+            >
+              2
+            </button>
+            <button
+              type="button"
+              className="app-corner-btn"
+              onClick={handleNewConversation}
+              aria-label="Ir al chat"
+              title="Ir al chat (sin iniciar sesión)"
+            >
+              <Icon name="message-circle" size={14} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              className="app-corner-btn"
+              onClick={() => setForceDisclaimerOpen(true)}
+              aria-label="Ver aviso legal de entrada"
+              title="Ver aviso legal de entrada"
+            >
+              <Icon name="balanza" size={14} strokeWidth={2} />
+            </button>
+          </div>
+        )}
         <a href="#main-content" className="skip-link">
           Saltar al contenido principal
         </a>
@@ -145,6 +227,8 @@ function App() {
           sidebarOpen={sidebarOpen}
           theme={theme}
           onToggleTheme={toggleTheme}
+          isLanding={isLanding}
+          isChatView={!!chatIdFromRoute}
         />
 
         <Sidebar
@@ -157,13 +241,40 @@ function App() {
           onRestoreConversation={restoreConversation}
           onRenameConversation={renameConversation}
           onClearAll={clearAllConversations}
+          onDeleteAllData={handleDeleteAllData}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
 
         <main id="main-content" className="app-main">
+          {chatIdFromRoute && (
+            <ChatLeftBar
+              onToggleSidebar={handleToggleSidebar}
+              onGoHome={handleGoHome}
+              onNewConversation={handleNewConversation}
+              onOpenDisclaimer={() => setForceDisclaimerOpen(true)}
+              sidebarOpen={sidebarOpen}
+              appVersion={appVersion}
+              onSetVersion={setAppVersion}
+            />
+          )}
+          {chatIdFromRoute && (
+            <button
+              type="button"
+              className="chat-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
+            </button>
+          )}
           <AnimatePresence mode="wait">
-            {isLanding ? (
+            {isLegalPage ? (
+              <Suspense key="legal" fallback={<SkeletonLanding />}>
+                <LegalPage key={path} />
+              </Suspense>
+            ) : isLanding ? (
               <Suspense key="landing" fallback={<SkeletonLanding />}>
                 <LandingPage
                   key="landing"
@@ -189,6 +300,13 @@ function App() {
             )}
           </AnimatePresence>
         </main>
+        <CookieBanner />
+        {appToast && (
+          <Toast
+            message={appToast.message}
+            onClose={() => setAppToast(null)}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );

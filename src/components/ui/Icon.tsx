@@ -5,7 +5,7 @@ type IconName =
   | 'chevron-down' | 'chevron-right' | 'arrow-right' | 'arrow-down'
   | 'edit' | 'trash' | 'copy' | 'check' | 'external-link' | 'open'
   | 'attach' | 'document' | 'sun' | 'moon' | 'settings' | 'info'
-  | 'alert-triangle' | 'shield-check' | 'scale' | 'briefcase'
+  | 'alert-triangle' | 'shield-check' | 'scale' | 'balanza' | 'briefcase'
   | 'home' | 'lock' | 'car' | 'file-text' | 'shopping-cart'
   | 'arrow-up' | 'message-circle';
 
@@ -159,6 +159,21 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M22 8c0 4-4.5 7-10 3" />
     </>
   ),
+  balanza: (
+    <>
+      {/* Base (centrado en viewBox 24x24) */}
+      <path d="M9 18h6l1 2H8l1-2z" />
+      <line x1="12" y1="18" x2="12" y2="4" />
+      <path d="M12 4l-2.5 2.5h5L12 4z" strokeLinejoin="round" />
+      <line x1="3" y1="6.5" x2="21" y2="6.5" />
+      {/* Izquierda: cadena + platillo (círculo = vista frontal del platillo) */}
+      <line x1="5" y1="6.5" x2="5" y2="10.5" />
+      <circle cx="5" cy="13" r="2.8" />
+      {/* Derecha */}
+      <line x1="19" y1="6.5" x2="19" y2="10.5" />
+      <circle cx="19" cy="13" r="2.8" />
+    </>
+  ),
   briefcase: (
     <>
       <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
@@ -207,9 +222,9 @@ const paths: Record<IconName, React.ReactNode> = {
 };
 
 const LexiaLogo: React.FC<{ size?: number }> = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-    <path d="M8 24V8h2.5v13.5H20V24H8Z" fill="currentColor" />
-    <circle cx="23" cy="10" r="2.5" fill="currentColor" opacity="0.6" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M6 18V6h1.875v10.125H15V18H6Z" fill="currentColor" />
+    <circle cx="17.25" cy="7.5" r="1.875" fill="currentColor" opacity="0.6" />
   </svg>
 );
 

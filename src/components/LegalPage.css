@@ -1,0 +1,109 @@
+/* ==============================================
+   Legal Page — Aviso Legal / Privacidad / Cookies
+   ============================================== */
+.legal-page {
+  min-height: 100dvh;
+  padding: calc(var(--header-height) + var(--space-6)) var(--space-4) var(--space-8);
+  background: var(--color-bg-primary);
+  overflow-y: auto;
+}
+
+.legal-page-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.legal-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--duration-quick) var(--ease-out);
+}
+
+.legal-page-back:hover {
+  color: var(--color-accent);
+}
+
+.legal-page-back-icon {
+  transform: rotate(180deg);
+}
+
+.legal-page-header {
+  margin-bottom: var(--space-8);
+}
+
+.legal-page-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--space-2);
+}
+
+.legal-page-updated {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.legal-page-body {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+}
+
+.legal-page-body h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-primary);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.legal-page-body h2:first-child {
+  margin-top: 0;
+}
+
+.legal-page-body p {
+  margin-bottom: var(--space-4);
+}
+
+.legal-page-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+}
+
+.legal-page-body th,
+.legal-page-body td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.legal-page-body th {
+  background: var(--color-surface-active);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.legal-page-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-6) 0;
+}
+
+.legal-page-body strong {
+  font-weight: var(--weight-semibold);
+}

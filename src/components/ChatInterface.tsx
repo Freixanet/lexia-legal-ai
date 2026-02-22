@@ -211,20 +211,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       transition={{ duration: 0.3 }}
       aria-busy={isStreaming}
     >
-      {/* Chat Header */}
-      <header className="chat-header">
-        <div className="chat-header-info">
-          <h2 className="chat-header-title">{conversation.title}</h2>
-        </div>
-        <div className="chat-header-controls">
-          {isOffline && (
-            <div className="header-status-indicator offline" role="alert">
-              Offline
-            </div>
-          )}
-        </div>
-      </header>
-
       {/* Messages Area */}
       <div
         className="chat-messages"

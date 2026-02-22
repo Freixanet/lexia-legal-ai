@@ -1,0 +1,98 @@
+/* ==============================================
+   ChatLeftBar — Barra vertical izquierda (solo desktop)
+   ============================================== */
+.chat-left-bar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .chat-left-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--chat-left-bar-width, 48px);
+    flex-shrink: 0;
+    z-index: var(--z-raised);
+    background: transparent;
+    border-right: 1px solid var(--color-border);
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+    padding-left: 0;
+    padding-right: 0;
+    gap: var(--space-2);
+  }
+
+  .chat-left-bar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background var(--duration-quick), color var(--duration-quick);
+  }
+
+  .chat-left-bar-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+  }
+
+  .chat-left-bar-btn.active {
+    background: var(--color-accent-subtle);
+    color: var(--color-accent);
+  }
+
+  .chat-left-bar-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .chat-left-bar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-accent);
+    cursor: pointer;
+    font: inherit;
+    transition: transform var(--duration-quick), color var(--duration-quick);
+  }
+
+  .chat-left-bar-logo:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .chat-left-bar-logo:hover {
+    color: var(--color-accent-hover);
+    transform: scale(1.05);
+  }
+
+  /* Bloque inferior: 1, 2, chat, balanza — mismo tamaño que los iconos de arriba */
+  .chat-left-bar-extra {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .chat-left-bar-version-btn {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+}

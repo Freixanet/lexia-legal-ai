@@ -47,8 +47,129 @@
   margin-left: var(--sidebar-width);
 }
 
+/* Barra vertical izquierda en chat (desktop/tablet): reservar espacio para no solapar */
+@media (min-width: 768px) {
+  .app.chat-view .chat-interface {
+    margin-left: var(--chat-left-bar-width, 48px);
+  }
+}
+
+/* En chat no hay TopBar: el contenido empieza desde arriba */
+.app.chat-view .chat-interface {
+  padding-top: 0;
+}
+
+/* Toggle tema en la esquina superior derecha de la pantalla de chat (solo desktop; en móvil está en el header) */
+.chat-theme-toggle {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-quick), color var(--duration-quick);
+}
+
+@media (max-width: 767px) {
+  .chat-theme-toggle {
+    display: none;
+  }
+}
+
+.chat-theme-toggle:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.chat-theme-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 @media (max-width: 768px) {
   .app.sidebar-open .app-main {
     margin-left: 0;
   }
+}
+
+/* --- Corner controls: 1, 2, chat, balanza — mismo espacio entre todos --- */
+.app-corner-controls {
+  position: fixed;
+  bottom: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.app-version-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity var(--duration-quick), color var(--duration-quick), background var(--duration-quick);
+}
+
+.app-version-btn:hover {
+  opacity: 0.7;
+  color: var(--color-text-secondary);
+}
+
+.app-version-btn.active {
+  opacity: 0.85;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+
+.app-version-btn:focus-visible {
+  opacity: 0.9;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.app-corner-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity var(--duration-quick), color var(--duration-quick);
+}
+
+.app-corner-btn:hover {
+  opacity: 0.7;
+  color: var(--color-text-secondary);
+}
+
+.app-corner-btn:focus-visible {
+  opacity: 0.8;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }

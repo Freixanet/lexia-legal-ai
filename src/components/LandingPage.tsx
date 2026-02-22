@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { EXAMPLE_PROMPTS } from '../services/prompts';
 import type { Attachment } from '../services/api';
@@ -290,6 +291,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
           <p className="landing-footer-text">
             Lexia proporciona orientación legal basada en IA. No sustituye el asesoramiento profesional.
           </p>
+          <nav className="landing-footer-legal" aria-label="Enlaces legales">
+            <Link to="/aviso-legal" className="landing-footer-link">Aviso legal</Link>
+            <span className="landing-footer-sep" aria-hidden="true">·</span>
+            <Link to="/privacidad" className="landing-footer-link">Política de privacidad</Link>
+            <span className="landing-footer-sep" aria-hidden="true">·</span>
+            <Link to="/cookies" className="landing-footer-link">Política de cookies</Link>
+          </nav>
         </motion.footer>
       </motion.div>
     </motion.div>

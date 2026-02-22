@@ -1,0 +1,93 @@
+/* ==============================================
+   Legal Disclaimer Modal — Primera visita, ineludible
+   Hermoso pero firme
+   ============================================== */
+.legal-disclaimer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(11, 15, 26, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:root[data-theme='light'] .legal-disclaimer-overlay {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.legal-disclaimer-card {
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-8);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.legal-disclaimer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--radius-full);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.legal-disclaimer-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 var(--space-4);
+}
+
+.legal-disclaimer-text {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+  font-weight: var(--weight-medium);
+}
+
+.legal-disclaimer-hint {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--space-6);
+}
+
+.legal-disclaimer-btn {
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-accent-text);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition: background var(--duration-quick) var(--ease-out), transform var(--duration-quick);
+}
+
+.legal-disclaimer-btn:hover {
+  background: var(--color-accent-hover);
+}
+
+.legal-disclaimer-btn:active {
+  transform: scale(0.98);
+}
+
+.legal-disclaimer-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}

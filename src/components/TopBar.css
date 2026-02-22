@@ -27,6 +27,92 @@
   transform: translate3d(var(--sidebar-width), 0, 0);
 }
 
+/* En chat: sin barra visual (solo el contenido: logo, Nueva consulta, Historial, tema) */
+.topbar--no-bar {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
+}
+
+/* En chat + desktop/tablet: ocultar todo el TopBar (logo e historial están en ChatLeftBar) */
+@media (min-width: 768px) {
+  .topbar--no-bar.topbar--mobile-chat {
+    display: none;
+  }
+
+  .topbar--no-bar .topbar-logo--chat-hide-desktop,
+  .topbar--no-bar .topbar-btn-historial,
+  .topbar--no-bar .topbar-btn-new-chat {
+    display: none;
+  }
+}
+
+/* En chat: el toggle de tema se muestra en la esquina del chat en desktop, no en el TopBar */
+.topbar--no-bar .topbar-theme-btn--hide-in-chat {
+  display: none;
+}
+
+/* En móvil + chat: mostrar toggle de tema en el header */
+.topbar-theme-btn--show-mobile-chat {
+  display: flex !important;
+}
+
+/* --- Móvil + chat: barra invisible, izquierda = historial + Lexia (solo texto) --- */
+.topbar-chat-left {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Misma altura que los iconos de la derecha (36px) y centrado vertical en el header */
+  .topbar--mobile-chat .topbar-chat-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    height: 36px;
+  }
+
+  .topbar--mobile-chat .topbar-chat-left .topbar-btn-historial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .topbar--mobile-chat .topbar-logo-text-only {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    height: 36px;
+    min-height: 36px;
+    line-height: 1;
+    border-radius: var(--radius-md);
+    transition: color var(--duration-quick);
+  }
+
+  .topbar--mobile-chat .topbar-logo-text-only:hover {
+    color: var(--color-accent);
+  }
+
+  .topbar--mobile-chat .topbar-logo-text-only:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
 /* --- Logo --- */
 .topbar-logo {
   display: flex;
@@ -120,6 +206,18 @@
   border-color: var(--color-accent);
 }
 
+.topbar-btn-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.topbar-btn-primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-text);
+}
+
 .topbar-theme-btn {
   border: none;
   padding: var(--space-2);
@@ -137,6 +235,13 @@
     -webkit-backdrop-filter: none;
   }
 
+  /* En chat: barra invisible, mismo color que el contenido (no secundario) */
+  .topbar--no-bar.topbar--mobile-chat {
+    background: var(--color-bg-primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .sidebar-open .topbar {
     transform: translate3d(0, 0, 0);
   }
@@ -145,10 +250,36 @@
     display: none;
   }
 
+  /* En móvil, en landing: mostrar solo Iniciar sesión con estilo primario */
+  .topbar-btn-landing-signin .topbar-btn-label {
+    display: inline;
+  }
+
+  .topbar-btn-landing-primary {
+    display: none;
+  }
+
+  .topbar-btn-landing-signin {
+    background: var(--color-accent);
+    color: var(--color-accent-text);
+    border-color: var(--color-accent);
+  }
+
+  .topbar-btn-landing-signin:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: var(--color-accent-text);
+  }
+
   .topbar-btn {
     padding: var(--space-2);
     border: none;
     min-height: 36px;
+  }
+
+  .topbar-btn-landing-signin {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-accent);
   }
 
   .topbar-logo-icon {

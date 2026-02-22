@@ -1,5 +1,6 @@
 import { LEXIA_SYSTEM_PROMPT } from './prompts';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { pseudonymizeUserContent } from '../utils/pseudonymize';
 
 export interface Attachment {
   name: string;
@@ -49,7 +50,7 @@ export async function generateSmartTitle(firstMessage: string): Promise<string> 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         task: 'title',
-        messages: [{ role: 'user', content: firstMessage }]
+        messages: [{ role: 'user', content: pseudonymizeUserContent(firstMessage) }]
       })
     });
 
@@ -88,7 +89,7 @@ export async function streamChat(
       body: JSON.stringify({
         messages: messages.map((m) => ({
           role: m.role,
-          content: m.content,
+          content: m.role === 'user' ? pseudonymizeUserContent(m.content) : m.content,
           attachments: m.attachments,
         })),
         systemPrompt: LEXIA_SYSTEM_PROMPT,

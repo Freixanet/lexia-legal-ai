@@ -1,0 +1,189 @@
+/* ============================================
+   LEXIA — Versión alternativa (data-app-version="alt")
+   Paleta púrpura, Inter, escala y espaciado especificados
+   ============================================ */
+
+/* --- Tipografía y escala --- */
+[data-app-version="alt"] {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-2xs: 0.75rem;     /* 12px - xs */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px - small */
+  --text-base: 1rem;       /* 16px - body */
+  --text-lg: 1.25rem;      /* 20px - h4 */
+  --text-xl: 1.5rem;       /* 24px - h3 */
+  --text-2xl: 2.25rem;     /* 36px - h2 */
+  --text-3xl: 3rem;        /* 48px - h1 */
+  --text-4xl: 3rem;
+  --text-5xl: 3.815rem;
+  --text-6xl: 4.768rem;
+  --text-hero: clamp(2.25rem, 5vw, 3rem);
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing (múltiplos de 4) */
+  --space-1: 0.25rem;   /* 4 */
+  --space-2: 0.5rem;    /* 8 */
+  --space-3: 0.75rem;   /* 12 */
+  --space-4: 1rem;      /* 16 */
+  --space-5: 1.25rem;   /* 20 */
+  --space-6: 1.5rem;    /* 24 */
+  --space-8: 2rem;      /* 32 */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 */
+  --space-16: 4rem;     /* 64 */
+  --space-20: 5rem;     /* 80 */
+  --space-24: 6rem;     /* 96 */
+  --space-32: 8rem;
+
+  /* Border radius */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+  --radius-button: 6px;
+  --radius-card: 16px;
+  --radius-input: 10px;
+  --radius-modal: 16px;
+  --radius-pill: 9999px;
+}
+
+/* ========== DARK MODE (default para alt) ========== */
+[data-app-version="alt"],
+[data-app-version="alt"][data-theme="dark"] {
+  --color-bg-primary: #0A0A0B;
+  --color-bg-secondary: #141416;
+  --color-bg-tertiary: #1C1C1F;
+  --color-bg-elevated: #1C1C1F;
+  --color-bg-hover: #242428;
+  --color-bg-input: #1C1C1F;
+  --color-bg-wash: #141416;
+
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: #242428;
+  --color-surface-active: #27272A;
+  --color-surface-raised: #1C1C1F;
+
+  --color-text-primary: #FAFAFA;
+  --color-text-secondary: #A1A1AA;
+  --color-text-tertiary: #71717A;
+  --color-text-dim: #71717A;
+  --color-text-disabled: #52525B;
+  --color-text-inverse: #0A0A0B;
+
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #7C6CF7;
+  --color-accent-subtle: rgba(108, 92, 231, 0.15);
+  --color-accent-text: #FFFFFF;
+  --color-accent-gradient-start: #6C5CE7;
+  --color-accent-gradient-end: #A78BFA;
+
+  --color-brand: #6C5CE7;
+  --color-brand-hover: #7C6CF7;
+  --color-brand-text: #FFFFFF;
+
+  --color-gold: #A78BFA;
+  --color-gold-subtle: rgba(167, 139, 250, 0.12);
+
+  --color-border: #27272A;
+  --color-border-strong: #3F3F46;
+  --color-border-focus: rgba(108, 92, 231, 0.5);
+
+  --color-glass-bg: rgba(20, 20, 22, 0.9);
+  --color-glass-border: #27272A;
+  --color-glass-border-focus: #3F3F46;
+  --color-topbar-bg: rgba(10, 10, 11, 0.9);
+  --color-chat-header-bg: rgba(10, 10, 11, 0.92);
+
+  --color-success: #22C55E;
+  --color-success-subtle: rgba(34, 197, 94, 0.12);
+  --color-error: #EF4444;
+  --color-error-subtle: rgba(239, 68, 68, 0.12);
+  --color-warning: #F59E0B;
+  --color-warning-subtle: rgba(245, 158, 11, 0.12);
+  --color-info: #3B82F6;
+  --color-info-subtle: rgba(59, 130, 246, 0.12);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.15);
+  --shadow-glass: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+  --shadow-glass-focus: 0 12px 48px -8px rgba(0, 0, 0, 0.55);
+  --shadow-button: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  --radial-glow-1: rgba(108, 92, 231, 0.08);
+  --radial-glow-2: rgba(108, 92, 231, 0.03);
+  --mesh-color-1: rgba(108, 92, 231, 0.06);
+  --mesh-color-2: rgba(167, 139, 250, 0.04);
+  --mesh-color-3: rgba(129, 140, 248, 0.03);
+}
+
+/* ========== LIGHT MODE (alt) ========== */
+[data-app-version="alt"][data-theme="light"] {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F9FAFB;
+  --color-bg-tertiary: #F3F4F6;
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-hover: #F3F4F6;
+  --color-bg-input: #FFFFFF;
+  --color-bg-wash: #F9FAFB;
+
+  --color-surface: rgba(0, 0, 0, 0.03);
+  --color-surface-hover: #F3F4F6;
+  --color-surface-active: #E5E7EB;
+  --color-surface-raised: #FFFFFF;
+
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary: #6B7280;
+  --color-text-dim: #6B7280;
+  --color-text-disabled: #9CA3AF;
+  --color-text-inverse: #FFFFFF;
+
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #5B4CDB;
+  --color-accent-subtle: rgba(108, 92, 231, 0.1);
+  --color-accent-text: #FFFFFF;
+
+  --color-brand: #6C5CE7;
+  --color-brand-hover: #5B4CDB;
+  --color-brand-text: #FFFFFF;
+
+  --color-border: #E5E7EB;
+  --color-border-strong: #D1D5DB;
+  --color-topbar-bg: rgba(255, 255, 255, 0.9);
+  --color-chat-header-bg: rgba(249, 250, 251, 0.95);
+
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.08);
+}
+
+/* Disclaimer text: 12px, italic (alt) */
+[data-app-version="alt"] .legal-disclaimer-text,
+[data-app-version="alt"] .message-disclaimer-text {
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+}

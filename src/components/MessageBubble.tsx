@@ -7,6 +7,7 @@ import Icon from './ui/Icon';
 import { LexiaLogo } from './ui/Icon';
 import { parseSources, preprocessContent } from '../utils/citations';
 import { extractAlerts } from '../utils/legalSections';
+import { DISCLAIMER_LEGAL_TEXT, DISCLAIMER_LEGAL_LINK, DISCLAIMER_LEGAL_LINK_LABEL } from '../constants/legal';
 import './MessageBubble.css';
 
 interface MessageBubbleProps {
@@ -127,6 +128,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
                   <p className="legal-alert-content">{alert.content}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!isUser && !isStreaming && (
+            <div className="message-disclaimer" role="note" aria-label="Aviso legal">
+              <span className="message-disclaimer-icon" aria-hidden="true">⚖️</span>
+              <p className="message-disclaimer-text">{DISCLAIMER_LEGAL_TEXT}</p>
+              <a
+                href={DISCLAIMER_LEGAL_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="message-disclaimer-link"
+              >
+                {DISCLAIMER_LEGAL_LINK_LABEL} →
+              </a>
             </div>
           )}
 

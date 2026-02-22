@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { get, set } from 'idb-keyval';
+import { STORAGE_KEY_CONVERSATIONS } from '../constants/storage';
 import { streamChat, generateId, generateTitle, generateSmartTitle, type Message, type Conversation, type Attachment } from '../services/api';
 import { streamStore } from '../store/streamStore';
-
-const STORAGE_KEY_CONVERSATIONS = 'lexia_conversations';
 
 export function useChat() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
