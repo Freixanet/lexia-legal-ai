@@ -9,6 +9,7 @@ import './ChatInterface.css';
 import Worker from '../workers/fileProcessor?worker';
 import { streamStore } from '../store/streamStore';
 import { MAX_MESSAGE_CHARACTERS } from '../constants/chat';
+import { getContentLimitError } from '../utils/chatRequest';
 
 interface ChatInterfaceProps {
   conversation: Conversation;
@@ -76,6 +77,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onShowToast,
 }) => {
   const [input, setInput] = useState(() => draftConfig.getDraft(conversation.id));
+  const contentLimitError = getContentLimitError(input.trim());
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
@@ -223,7 +225,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
-    if ((!trimmed && !pendingAttachment) || isStreaming || input.length > MAX_MESSAGE_CHARACTERS) return;
+    if ((!trimmed && !pendingAttachment) || isStreaming || input.length > MAX_MESSAGE_CHARACTERS || contentLimitError) return;
     onFocusModeChange?.(false);
     if (isOffline) {
       pendingOfflineMessageRef.current = { content: trimmed, attachment: pendingAttachment || undefined };
@@ -443,7 +445,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               className="chat-input"
               value={input}
               maxLength={MAX_MESSAGE_CHARACTERS}
-              aria-describedby={input.length >= MAX_MESSAGE_CHARACTERS * 0.9 ? 'chat-message-limit' : undefined}
+              aria-describedby={input.length >= MAX_MESSAGE_CHARACTERS * 0.9 || contentLimitError ? 'chat-message-limit' : undefined}
               onChange={handleInputChange}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
@@ -469,7 +471,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   id="chat-send-btn"
                   type="submit"
                   className="chat-send-btn"
-                  disabled={(!input.trim() && !pendingAttachment) || isProcessingFile || input.length > MAX_MESSAGE_CHARACTERS}
+                  disabled={(!input.trim() && !pendingAttachment) || isProcessingFile || input.length > MAX_MESSAGE_CHARACTERS || Boolean(contentLimitError)}
                   aria-label="Enviar mensaje"
                 >
                   <Icon name="send" size={16} />
@@ -477,9 +479,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
             </div>
           </motion.div>
-          {input.length >= MAX_MESSAGE_CHARACTERS * 0.9 && (
+          {(input.length >= MAX_MESSAGE_CHARACTERS * 0.9 || contentLimitError) && (
             <p id="chat-message-limit" className="chat-disclaimer" role="status">
-              {input.length} / {MAX_MESSAGE_CHARACTERS} caracteres. Si necesitas más espacio, divide tu consulta.
+              {input.length} / {MAX_MESSAGE_CHARACTERS} caracteres. {contentLimitError ?? 'Si necesitas más espacio, divide tu consulta.'}
             </p>
           )}
           <p className="chat-disclaimer" aria-label="Aviso legal">
