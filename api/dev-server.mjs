@@ -4,6 +4,7 @@ import http from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chatBodySchema } from './chat-schema.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -41,9 +42,19 @@ const server = http.createServer(async (req, res) => {
   // Read body
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
-  const body = JSON.parse(Buffer.concat(chunks).toString());
-
-  const { messages, systemPrompt, jurisdiction, sourcesEnabled, task } = body;
+  let body;
+  try {
+    body = JSON.parse(Buffer.concat(chunks).toString());
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+  }
+  const parsed = chatBodySchema.safeParse(body);
+  if (!parsed.success) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' }));
+  }
+  const { messages, systemPrompt, jurisdiction, sourcesEnabled, task } = parsed.data;
 
   // --- TASK: TITLE GENERATION ---
   if (task === 'title') {
@@ -182,8 +193,8 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(3000, () => {
-  console.log('🔌 API dev proxy running on http://localhost:3000');
+server.listen(Number(process.env.PORT ?? 3000), '127.0.0.1', () => {
+  console.log(`🔌 API dev proxy running on http://127.0.0.1:${server.address().port}`);
   console.log('   Forwarding /api/chat → Gemini API');
   console.log(`   API key: ${GEMINI_API_KEY ? '✅ loaded' : '❌ missing'}`);
 });
