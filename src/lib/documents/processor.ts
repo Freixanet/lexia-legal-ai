@@ -3,6 +3,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Buffer } from 'node:buffer';
 import { nanoid } from 'nanoid';
 import { extractText } from './extractor';
 import type { ProcessedDocument } from '@/types/documents';

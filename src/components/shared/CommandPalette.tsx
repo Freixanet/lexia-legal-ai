@@ -97,7 +97,7 @@ export function CommandPalette({
       ? fromConversations.filter((c) => c.title.toLowerCase().includes(q))
       : fromConversations.slice(0, 5);
     const actions = q
-      ? quickActions.filter((a) => a.label.toLowerCase().includes(q) || (a.description?.toLowerCase().includes(q)))
+      ? quickActions.filter((a) => getItemLabel(a).toLowerCase().includes(q) || (a.description?.toLowerCase().includes(q)))
       : quickActions;
     const result: CommandAction[] = [...actions, ...matchedConvs];
     return result.slice(0, 12);

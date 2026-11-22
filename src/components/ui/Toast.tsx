@@ -18,6 +18,7 @@ function Toaster(props: ToasterProps) {
   return (
     <SonnerToaster
       position="bottom-right"
+      icons={toastIcons}
       toastOptions={{
         style: {
           background: 'var(--color-bg-elevated)',
@@ -26,10 +27,6 @@ function Toaster(props: ToasterProps) {
           boxShadow: 'var(--shadow-lg)',
           color: 'var(--color-text-primary)',
         },
-        success: { icon: toastIcons.success },
-        error: { icon: toastIcons.error },
-        info: { icon: toastIcons.info },
-        warning: { icon: toastIcons.warning },
       }}
       {...props}
     />
@@ -110,5 +107,6 @@ function ToastInline({ message, actionLabel, onAction, onClose }: ToastInlinePro
   );
 }
 
-export { Toaster, toast } from 'sonner';
+export { Toaster };
+export { toast } from 'sonner';
 export default ToastInline;

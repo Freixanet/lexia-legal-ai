@@ -1,8 +1,8 @@
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
-import { motion } from 'framer-motion';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { forwardRef, type ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 const cardVariants = cva(
@@ -22,7 +22,7 @@ const cardVariants = cva(
 );
 
 export interface CardProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  extends Omit<HTMLMotionProps<'div'>, 'children'>,
     VariantProps<typeof cardVariants> {
   /** Contenido del header. */
   header?: ReactNode;

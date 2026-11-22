@@ -1,7 +1,7 @@
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
-import { motion } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils/cn';
 
 const spinnerVariants = cva('shrink-0 rounded-[var(--radius-full)]', {
@@ -22,7 +22,7 @@ const spinnerVariants = cva('shrink-0 rounded-[var(--radius-full)]', {
 });
 
 export interface SpinnerProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<HTMLMotionProps<'div'>, 'color'>,
     VariantProps<typeof spinnerVariants> {}
 
 function Spinner({ className, size, color, ...props }: SpinnerProps) {
