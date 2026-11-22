@@ -2,11 +2,11 @@
 
 import { cn } from '@/lib/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
-import TextareaAutosize from 'react-textarea-autosize';
-import { forwardRef, type TextareaHTMLAttributes } from 'react';
+import TextareaAutosize, { type TextareaAutosizeProps } from 'react-textarea-autosize';
+import { forwardRef } from 'react';
 
 export interface TextareaProps
-  extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> {
+  extends Omit<TextareaAutosizeProps, 'className'> {
   /** Etiqueta. */
   label?: string;
   /** Mensaje de error. */

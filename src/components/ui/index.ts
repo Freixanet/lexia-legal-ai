@@ -41,6 +41,6 @@ export { Separator } from './separator';
 export { Skeleton, skeletonVariants, SkeletonLanding, SkeletonChat } from './Skeleton';
 export { Spinner, spinnerVariants } from './spinner';
 export { Textarea } from './textarea';
-export { Toaster, toast } from './toast';
+export { Toaster, toast } from './Toast';
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip';
 export { Avatar, avatarSizes } from './avatar';

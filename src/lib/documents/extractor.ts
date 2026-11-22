@@ -4,6 +4,7 @@
  */
 
 import mammoth from 'mammoth';
+import { Buffer } from 'node:buffer';
 import { PDFParse } from 'pdf-parse';
 import Tesseract from 'tesseract.js';
 
@@ -21,15 +22,13 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     if (text.length >= OCR_MIN_TEXT_LENGTH) {
       return text;
     }
-    const doc = await parser.load();
-    const numPages = doc?.numPages ?? 0;
+    const numPages = textResult.total;
     if (numPages === 0) return text || '';
 
     const screenshotResult = await parser.getScreenshot({
       imageBuffer: true,
       scale: 2,
     });
-    await parser.destroy();
 
     const pageImages = screenshotResult?.pages ?? [];
     if (pageImages.length === 0) return text || '';

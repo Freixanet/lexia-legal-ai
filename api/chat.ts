@@ -2,30 +2,7 @@ export const config = { runtime: 'edge' };
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kv } from '@vercel/kv';
-import { z } from 'zod';
-
-const MAX_MESSAGE_LENGTH = 10000;
-const MAX_MESSAGES = 100;
-const MAX_SYSTEM_PROMPT_LENGTH = 20000;
-
-const attachmentSchema = z.object({
-  type: z.string().max(100),
-  data: z.string().max(5_000_000),
-});
-
-const chatMessageSchema = z.object({
-  role: z.enum(['user', 'model', 'assistant']),
-  content: z.string().min(1).max(MAX_MESSAGE_LENGTH),
-  attachments: z.array(attachmentSchema).optional(),
-});
-
-const chatBodySchema = z.object({
-  messages: z.array(chatMessageSchema).min(1).max(MAX_MESSAGES),
-  systemPrompt: z.string().max(MAX_SYSTEM_PROMPT_LENGTH).optional(),
-  jurisdiction: z.string().max(20).optional(),
-  sourcesEnabled: z.boolean().optional(),
-  task: z.enum(['title', 'chat']).optional(),
-});
+import { chatBodySchema } from './chat-schema';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -184,7 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Convert to Gemini format (roles already validated by Zod)
     const contents = messages.map((m) => {
-      const parts: { text: string; inlineData?: { mimeType: string; data: string } }[] = [{ text: m.content }];
+      const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = m.content ? [{ text: m.content }] : [];
       if (m.attachments?.length) {
         for (const att of m.attachments) {
           const base64Data = att.data.includes(',') ? att.data.split(',')[1] : att.data;
