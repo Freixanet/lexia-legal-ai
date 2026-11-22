@@ -8,6 +8,7 @@ import type { Conversation, Attachment } from '../services/api';
 import './ChatInterface.css';
 import Worker from '../workers/fileProcessor?worker';
 import { streamStore } from '../store/streamStore';
+import { MAX_MESSAGE_CHARACTERS } from '../constants/chat';
 
 interface ChatInterfaceProps {
   conversation: Conversation;
@@ -222,7 +223,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
-    if ((!trimmed && !pendingAttachment) || isStreaming) return;
+    if ((!trimmed && !pendingAttachment) || isStreaming || input.length > MAX_MESSAGE_CHARACTERS) return;
     onFocusModeChange?.(false);
     if (isOffline) {
       pendingOfflineMessageRef.current = { content: trimmed, attachment: pendingAttachment || undefined };
@@ -441,6 +442,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               }}
               className="chat-input"
               value={input}
+              maxLength={MAX_MESSAGE_CHARACTERS}
+              aria-describedby={input.length >= MAX_MESSAGE_CHARACTERS * 0.9 ? 'chat-message-limit' : undefined}
               onChange={handleInputChange}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
@@ -466,7 +469,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   id="chat-send-btn"
                   type="submit"
                   className="chat-send-btn"
-                  disabled={(!input.trim() && !pendingAttachment) || isProcessingFile}
+                  disabled={(!input.trim() && !pendingAttachment) || isProcessingFile || input.length > MAX_MESSAGE_CHARACTERS}
                   aria-label="Enviar mensaje"
                 >
                   <Icon name="send" size={16} />
@@ -474,6 +477,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
             </div>
           </motion.div>
+          {input.length >= MAX_MESSAGE_CHARACTERS * 0.9 && (
+            <p id="chat-message-limit" className="chat-disclaimer" role="status">
+              {input.length} / {MAX_MESSAGE_CHARACTERS} caracteres. Si necesitas más espacio, divide tu consulta.
+            </p>
+          )}
           <p className="chat-disclaimer" aria-label="Aviso legal">
             Lexia proporciona información orientativa. No constituye asesoramiento legal profesional.
           </p>

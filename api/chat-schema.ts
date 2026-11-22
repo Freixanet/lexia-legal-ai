@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_CHAT_MESSAGES, MAX_MESSAGE_CHARACTERS } from '../src/constants/chat.ts';
 
 const attachmentSchema = z.object({
   type: z.string().max(100),
@@ -8,9 +9,9 @@ const attachmentSchema = z.object({
   ),
 });
 
-const chatMessageSchema = z.object({
+export const chatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'assistant']),
-  content: z.string().max(10000),
+  content: z.string().max(MAX_MESSAGE_CHARACTERS),
   attachments: z.array(attachmentSchema).optional(),
 }).refine((message) => message.content.length > 0 || (message.attachments?.length ?? 0) > 0, {
   message: 'Message content or an attachment is required',
@@ -18,7 +19,7 @@ const chatMessageSchema = z.object({
 });
 
 export const chatBodySchema = z.object({
-  messages: z.array(chatMessageSchema).min(1).max(100),
+  messages: z.array(chatMessageSchema).min(1).max(MAX_CHAT_MESSAGES),
   systemPrompt: z.string().max(20000).optional(),
   jurisdiction: z.string().max(20).optional(),
   sourcesEnabled: z.boolean().optional(),

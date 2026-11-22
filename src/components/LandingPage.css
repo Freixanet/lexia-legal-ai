@@ -1,6 +1,13 @@
 /* ==============================================
    Landing Page — Premium First Impression
    ============================================== */
+.landing-message-limit {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-dim);
+  margin-top: var(--space-2);
+}
+
 .landing {
   min-height: 100dvh;
   display: flex;
