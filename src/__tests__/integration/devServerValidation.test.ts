@@ -46,6 +46,8 @@ describe('local chat validation', () => {
   });
 
   it.each([
+    ['empty raw attachment', JSON.stringify({ messages: [{ role: 'user', content: 'Read this', attachments: [{ type: 'application/pdf', data: '' }] }] })],
+    ['empty data URL attachment', JSON.stringify({ messages: [{ role: 'user', content: '', attachments: [{ type: 'application/pdf', data: 'data:application/pdf;base64,' }] }] })],
     ['invalid JSON', '{'],
     ['missing messages', '{}'],
     ['empty messages', JSON.stringify({ messages: [] })],
@@ -61,9 +63,9 @@ describe('local chat validation', () => {
     expect(await response.json()).toEqual({ error: expect.any(String) });
   });
 
-  it('forwards attachment-only messages without an empty Gemini text part', async () => {
+  it.each(['aGVsbG8=', 'data:image/png;base64,aGVsbG8='])('forwards attachment-only messages without an empty Gemini text part: %s', async (data) => {
     const response = await post(JSON.stringify({ messages: [{
-      role: 'user', content: '', attachments: [{ type: 'image/png', data: 'data:image/png;base64,aGVsbG8=' }],
+      role: 'user', content: '', attachments: [{ type: 'image/png', data }],
     }] }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ contents: [{

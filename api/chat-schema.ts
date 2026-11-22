@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 const attachmentSchema = z.object({
   type: z.string().max(100),
-  data: z.string().max(5_000_000),
+  data: z.string().max(5_000_000).refine(
+    (data) => (data.includes(',') ? data.split(',')[1] : data).length > 0,
+    { message: 'Attachment payload must not be empty' },
+  ),
 });
 
 const chatMessageSchema = z.object({
