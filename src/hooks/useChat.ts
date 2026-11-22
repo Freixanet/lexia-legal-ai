@@ -3,6 +3,7 @@ import { get, set } from 'idb-keyval';
 import { STORAGE_KEY_CONVERSATIONS } from '../constants/storage';
 import { streamChat, generateId, generateTitle, generateSmartTitle, type Message, type Conversation, type Attachment } from '../services/api';
 import { streamStore } from '../store/streamStore';
+import { getContentLimitError, getRequestMessages, isRequestMessageValid } from '../utils/chatRequest';
 
 export function useChat() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -148,6 +149,15 @@ export function useChat() {
   const sendMessage = useCallback(
     async (content: string, options?: { jurisdiction?: string; sourcesEnabled?: boolean; attachment?: Attachment }) => {
       setError(null);
+      const contentError = getContentLimitError(content);
+      if (contentError) {
+        setError(contentError);
+        return;
+      }
+      if (!isRequestMessageValid({ role: 'user', content, attachments: options?.attachment ? [options.attachment] : undefined, id: '', timestamp: 0 })) {
+        setError('Escribe una consulta o adjunta un archivo con contenido válido.');
+        return;
+      }
       let conversationId = activeConversationId;
       
       const currentConversations = conversationsRef.current;
@@ -226,7 +236,7 @@ export function useChat() {
       }
 
       // Fire and forget the stream so the UI can navigate instantly and show loading state
-      streamChat(allMessages, {
+      streamChat(getRequestMessages(allMessages), {
         onToken: (token) => {
           streamStore.append(token);
         },
@@ -252,7 +262,13 @@ export function useChat() {
           setIsStreaming(false);
           streamStore.setContent('');
         },
-        onError: (errorMsg) => {
+        onError: (errorMsg, status) => {
+          if (status === 400) {
+            setConversations((prev) => prev.map((conversation) => conversation.id !== conversationId ? conversation : {
+              ...conversation,
+              messages: conversation.messages.map((message) => message.id === userMessage.id ? { ...message, requestRejected: true } : message),
+            }));
+          }
           setError(errorMsg);
           setIsStreaming(false);
           streamStore.setContent('');
