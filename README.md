@@ -5,13 +5,13 @@ A Spanish legal-information chat with streamed responses, document attachments a
 ## Engineering decisions
 
 - Redact selected identification patterns in the browser before sending user-message text.
-- Validate API request bodies with Zod.
+- Validate chat API request bodies with the same Zod schema and limits in the local proxy and deployed handler.
 - Keep the model key on the server.
 - Separate chat presentation, streaming transport and text transformations.
 
 ## Run locally
 
-Create a local `.env` containing `GEMINI_API_KEY=your_key`, then:
+Use Node.js 22.18 or newer (for native TypeScript loading). Create a local `.env` containing `GEMINI_API_KEY=your_key`, then:
 
 ```sh
 npm ci
@@ -23,6 +23,7 @@ In another terminal, run `npm run dev`. The interface listens on port 5174 and p
 ## Verify
 
 ```sh
+npm run typecheck
 npm run test:run
 npm run build
 npm run test:e2e
@@ -38,6 +39,6 @@ This reduces selected identifiers; it is not a general anonymization guarantee. 
 
 ## Deployment
 
-The Pages workflow publishes the static interface. GitHub Pages does not run the API in `api/`; a full live chat needs a server deployment as well. The static site is an interface preview, not proof of a functioning end-to-end service.
+The Pages workflow runs typechecking, tests and a build on pull requests and pushes to `main`; only non-PR runs publish the static interface. GitHub Pages does not run the API in `api/`; a full live chat needs a server deployment as well. The static site is an interface preview, not proof of a functioning end-to-end service.
 
 Built by [Marcos Freixanet](https://github.com/Freixanet) · [Contact](mailto:mfreixanet@icloud.com).
