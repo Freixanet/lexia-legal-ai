@@ -7,8 +7,11 @@ const attachmentSchema = z.object({
 
 const chatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'assistant']),
-  content: z.string().min(1).max(10000),
+  content: z.string().max(10000),
   attachments: z.array(attachmentSchema).optional(),
+}).refine((message) => message.content.length > 0 || (message.attachments?.length ?? 0) > 0, {
+  message: 'Message content or an attachment is required',
+  path: ['content'],
 });
 
 export const chatBodySchema = z.object({

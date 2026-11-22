@@ -161,7 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Convert to Gemini format (roles already validated by Zod)
     const contents = messages.map((m) => {
-      const parts: { text: string; inlineData?: { mimeType: string; data: string } }[] = [{ text: m.content }];
+      const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = m.content ? [{ text: m.content }] : [];
       if (m.attachments?.length) {
         for (const att of m.attachments) {
           const base64Data = att.data.includes(',') ? att.data.split(',')[1] : att.data;

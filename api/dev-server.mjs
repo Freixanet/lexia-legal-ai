@@ -127,7 +127,7 @@ const server = http.createServer(async (req, res) => {
   const finalSystemPrompt = (systemPrompt || '') + configPrompt;
 
   const contents = messages.map((m) => {
-    const parts = [{ text: m.content }];
+    const parts = m.content ? [{ text: m.content }] : [];
     
     if (m.attachments && Array.isArray(m.attachments)) {
       m.attachments.forEach((att) => {

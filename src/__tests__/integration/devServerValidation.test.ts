@@ -8,7 +8,7 @@ describe('local chat validation', () => {
   let baseUrl: string;
 
   beforeAll(async () => {
-    const stub = 'globalThis.fetch = async () => Response.json({ candidates: [{ content: { parts: [{ text: "Test title" }] } }] });';
+    const stub = 'globalThis.fetch = async (_, options) => { const body = JSON.parse(options.body); return Response.json(body.contents[0].parts[0]?.text?.includes("Mensaje:") ? { candidates: [{ content: { parts: [{ text: "Test title" }] } }] } : body); };';
     server = spawn(process.execPath, [
       '--import', `data:text/javascript,${encodeURIComponent(stub)}`,
       'api/dev-server.mjs',
@@ -50,6 +50,7 @@ describe('local chat validation', () => {
     ['missing messages', '{}'],
     ['empty messages', JSON.stringify({ messages: [] })],
     ['empty content', JSON.stringify({ messages: [{ role: 'user', content: '' }] })],
+    ['empty content and attachments', JSON.stringify({ messages: [{ role: 'user', content: '', attachments: [] }] })],
     ['invalid role', JSON.stringify({ messages: [{ role: 'invalid', content: 'Hola' }] })],
     ['oversized content', JSON.stringify({ messages: [{ role: 'user', content: 'x'.repeat(10001) }] })],
     ['too many messages', JSON.stringify({ messages: Array.from({ length: 101 }, () => ({ role: 'user', content: 'Hola' })) })],
@@ -58,5 +59,15 @@ describe('local chat validation', () => {
     const response = await post(body);
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: expect.any(String) });
+  });
+
+  it('forwards attachment-only messages without an empty Gemini text part', async () => {
+    const response = await post(JSON.stringify({ messages: [{
+      role: 'user', content: '', attachments: [{ type: 'image/png', data: 'data:image/png;base64,aGVsbG8=' }],
+    }] }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ contents: [{
+      role: 'user', parts: [{ inlineData: { mimeType: 'image/png', data: 'aGVsbG8=' } }],
+    }] });
   });
 });
