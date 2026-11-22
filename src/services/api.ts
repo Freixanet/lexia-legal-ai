@@ -1,6 +1,7 @@
 import { LEXIA_SYSTEM_PROMPT } from './prompts';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { pseudonymizeUserContent } from '../utils/pseudonymize';
+import { MAX_MESSAGE_CHARACTERS } from '../constants/chat';
 
 export interface Attachment {
   name: string;
@@ -14,6 +15,7 @@ export interface Message {
   content: string;
   timestamp: number;
   attachments?: Attachment[];
+  requestRejected?: boolean;
 }
 
 export interface Conversation {
@@ -27,7 +29,13 @@ export interface Conversation {
 export interface StreamCallbacks {
   onToken: (token: string) => void;
   onComplete: (fullText: string) => void;
-  onError: (error: string) => void;
+  onError: (error: string, status?: number) => void;
+}
+
+class ChatRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
 }
 
 // In development, calls localhost; in production, calls relative /api/chat
@@ -50,7 +58,7 @@ export async function generateSmartTitle(firstMessage: string): Promise<string> 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         task: 'title',
-        messages: [{ role: 'user', content: pseudonymizeUserContent(firstMessage) }]
+        messages: [{ role: 'user', content: pseudonymizeUserContent(firstMessage).slice(0, MAX_MESSAGE_CHARACTERS) }]
       })
     });
 
@@ -104,7 +112,7 @@ export async function streamChat(
           // client-side errors are usually non-retriable
            const errorData = await response.json().catch(() => ({}));
            const errorMessage = (errorData as Record<string, string>)?.error || `Error ${response.status}: ${response.statusText}`;
-           throw new Error(errorMessage);
+           throw new ChatRequestError(errorMessage, response.status);
         } else {
            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -189,7 +197,7 @@ export async function streamChat(
      if ((err as Error).message?.includes('Failed to fetch') || (err as Error).message?.includes('NetworkError')) {
        callbacks.onError('El servicio de IA no está disponible en esta versión estática. Visita la versión completa en Vercel para usar el asistente legal.');
      } else {
-       callbacks.onError(`Error de conexión: ${(err as Error).message}`);
+       callbacks.onError(`Error de conexión: ${(err as Error).message}`, err instanceof ChatRequestError ? err.status : undefined);
      }
   }
 }

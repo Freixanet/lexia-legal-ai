@@ -1,0 +1,2 @@
+export const MAX_MESSAGE_CHARACTERS = 10000;
+export const MAX_CHAT_MESSAGES = 100;

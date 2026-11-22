@@ -5,6 +5,8 @@ import { EXAMPLE_PROMPTS } from '../services/prompts';
 import type { Attachment } from '../services/api';
 import Icon from './ui/Icon';
 import { LexiaLogo } from './ui/Icon';
+import { MAX_MESSAGE_CHARACTERS } from '../constants/chat';
+import { getContentLimitError } from '../utils/chatRequest';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -59,6 +61,7 @@ const cardVariants = {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const [input, setInput] = useState('');
+  const contentLimitError = getContentLimitError(input.trim());
   const [showAllCards, setShowAllCards] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
-    if (!trimmed && !pendingAttachment) return;
+    if ((!trimmed && !pendingAttachment) || input.length > MAX_MESSAGE_CHARACTERS || contentLimitError) return;
     onSendMessage(trimmed, { attachment: pendingAttachment || undefined });
     setInput('');
     setPendingAttachment(null);
@@ -189,6 +192,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
               className="landing-search-input"
               type="text"
               value={input}
+              maxLength={MAX_MESSAGE_CHARACTERS}
+              aria-describedby={input.length >= MAX_MESSAGE_CHARACTERS * 0.9 || contentLimitError ? 'landing-message-limit' : undefined}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe tu situación legal..."
               autoComplete="off"
@@ -199,13 +204,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSendMessage }) => {
                 id="landing-submit-btn"
                 className="landing-search-btn"
                 type="submit"
-                disabled={!input.trim() && !pendingAttachment}
+                disabled={(!input.trim() && !pendingAttachment) || input.length > MAX_MESSAGE_CHARACTERS || Boolean(contentLimitError)}
                 aria-label="Enviar consulta"
               >
                 <Icon name="arrow-right" size={18} />
               </button>
             </div>
           </motion.div>
+          {(input.length >= MAX_MESSAGE_CHARACTERS * 0.9 || contentLimitError) && (
+            <p id="landing-message-limit" className="landing-message-limit" role="status">
+              {input.length} / {MAX_MESSAGE_CHARACTERS} caracteres. {contentLimitError ?? 'Si necesitas más espacio, divide tu consulta.'}
+            </p>
+          )}
         </motion.form>
 
         {/* Example Prompts */}
